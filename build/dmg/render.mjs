@@ -87,7 +87,11 @@ function encodeOpaquePng(width, height, rgba) {
   return Buffer.concat([PNG_SIGNATURE, chunk("IHDR", header), chunk("pHYs", density), chunk("IDAT", pixels), chunk("IEND", Buffer.alloc(0))]);
 }
 
-const svg = readFileSync(new URL("background.svg", import.meta.url), "utf8");
+// The crew pictures sit beside the art as files; resvg gets them inline.
+const svg = readFileSync(new URL("background.svg", import.meta.url), "utf8").replace(
+  /href="(crew\/[a-z]+\.png)"/g,
+  (_, path) => `href="data:image/png;base64,${readFileSync(new URL(path, import.meta.url)).toString("base64")}"`,
+);
 for (const [scale, name] of [
   [1, "background.png"],
   [2, "background@2x.png"],

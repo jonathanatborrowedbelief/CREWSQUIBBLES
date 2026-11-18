@@ -16,6 +16,7 @@ import { AvatarImageGenerator } from "../AvatarImageGenerator";
 import { AvatarFraming, OrganizationAvatarIcons, RESET_MASCOT_PATCH, useAvatarImage, type AvatarPatch } from "../avatar-editing";
 import { Segmented } from "./rows";
 import { MascotFaceColorPicker } from "../MascotFaceColorPicker";
+import { CREW_LOOKS } from "@/lib/steel-body";
 
 export type AvatarEditorTab = "bot" | "generate" | "upload";
 
@@ -43,6 +44,13 @@ const FACE_KEY: Partial<Record<MausState, LocaleKey>> = {
   sleeping: "botPanel.face.sleeping",
   suspicious: "botPanel.face.suspicious",
   proud: "botPanel.face.proud",
+};
+
+const CREW_KEY: Record<(typeof CREW_LOOKS)[number]["id"], LocaleKey> = {
+  squibbles: "mascot.crew.squibbles",
+  builder: "mascot.crew.builder",
+  qa: "mascot.crew.qa",
+  coder: "mascot.crew.coder",
 };
 
 const faceLabel = (state: MausState) => {
@@ -139,6 +147,30 @@ export function AvatarEditorCard({ bot, activeState, onPatch, onClose }: {
       <div className="p-3">
         {tab === "bot" && (
           <>
+            <div className="px-1 pb-1.5 text-[12px] text-ink-tertiary">{t("botPanel.avatar.crew")}</div>
+            <div className="mb-2.5 grid grid-cols-5 gap-1.5" data-avatar-crew>
+              {CREW_LOOKS.map(({ id, color }) => {
+                const name = t(CREW_KEY[id]);
+                const picked = !showsImage && body === "cursor" && bot.color === color && !bot.mascotFaceColor;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    disabled={busy}
+                    aria-pressed={picked}
+                    aria-label={t("mascot.useBody", { name })}
+                    title={name}
+                    onClick={() => pickMascot({ mascotBody: "cursor", color, mascotFaceColor: null })}
+                    className={cn(
+                      "flex h-[58px] items-center justify-center rounded-xl disabled:opacity-50",
+                      picked ? "bg-ink/[0.08] ring-[1.5px] ring-inset ring-ink/25" : "hover:bg-ink/[0.05]",
+                    )}
+                  >
+                    <MausAvatar color={color} bodyId="cursor" size={40} animated={false} trackPointer={false} />
+                  </button>
+                );
+              })}
+            </div>
             <div className="grid grid-cols-5 gap-1.5">
               {MASCOT_BODY_IDS.map((id) => bodyButton(id, bodyName(id)))}
             </div>
