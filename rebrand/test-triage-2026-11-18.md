@@ -1,0 +1,169 @@
+# Full test suite triage (2026-11-18)
+
+Run: `pnpm exec vitest run` on dbb5f35, 3 h 10 min. 155 of 40,659 tests fail, in 93 files. All 93 files were re-run on this branch and on upstream `base-upstream-0.1.169` (same Mac, same conditions).
+
+| Cause | Tests | Action |
+|---|---|---|
+| Expect old brand text ("MausBot", "OpenMausBot", "Meet MausBot") | ~106 | Update expectations during the full rebrand |
+| enterprise/ deleted (hosted-access ×8, duration-sequencer ×2, hosted-models-api, worker-port) | 12 | Drop or skip those tests; remove enterprise paths from `scripts/testing/vitest-shard-weights.json` |
+| Crew-row change (reset color, body count, pt-br pack) | 3 | Fixed in the commit after dbb5f35 |
+| Fail on upstream too (this Mac: browser, engines, timing) | 34 | Not ours; ignore |
+
+## Fail on upstream too (34)
+- scripts/testing/bot-tools-ui.e2e.test.ts > bot setup and tools in the real renderer > makes bots at once, configures per-bot MCP access, and recovers a rejected ready-made bot
+- scripts/testing/browser-evidence.e2e.test.ts > recorded browser steps through the real server > records a recording bot's steps, serves them, and deletes them with the conversation
+- scripts/testing/browser-fill.e2e.test.ts > an agent-browser page a person watches in a narrow panel > fills the panel at a desktop's width, resizes only between the bot's calls, and gives the standard page back once nobody watches
+- scripts/testing/browser-identity.e2e.test.ts > a bot's browser on a real Chrome > gives the first page the same complete client hints when the identity is slow to land
+- scripts/testing/browser-identity.e2e.test.ts > a bot's browser on a real Chrome > opens a page 1280x720 inside whose user agent is Chrome's own, byte for byte, with the same complete client hints in the page, a worker, a service worker and a cross-site frame
+- scripts/testing/browser-passkey.e2e.test.ts > a passkey step in a bot's headless browser on agent-browser > ends the passkey request at once, so Try another way opens the other ways
+- scripts/testing/control-omb-ui.e2e.test.ts > control-omb ui drives the real renderer > sends a turn from the composer and shows the reply and the scripted tool chip
+- scripts/testing/team-access-ui.e2e.test.ts > lets an owner select and revoke exactly the Chief's additional teams in the real settings UI
+- scripts/testing/team-template-ui.e2e.test.ts > additive template imports in the real renderer > adds library and file templates as sections without losing existing chats
+- scripts/testing/tool-selection-ui.e2e.test.ts > saves, clears, rejects and duplicates owner tool selections without crossing bots
+- scripts/testing/trust-controls-ui.e2e.test.ts > trust controls in the real renderer > refreshes receipts, saves intersecting limits and serializes memory edits
+- scripts/testing/workspace-backup-ui.e2e.test.ts > full backup Settings in the real renderer > uses passwords, a file preview and explicit replacement without leaking secrets
+- server/bot-pause.e2e.test.ts > pausing a department pauses its bots, keeps the pause through a rename, and leaves other bots working
+- server/browser-live-routes.test.ts > live browser route authorization > opens GET live to the bot's people, never to strangers or another origin
+- server/browser-live-routes.test.ts > live browser route authorization > opens POST action to the bot's people, never to strangers or another origin
+- server/browser-live-routes.test.ts > live browser route authorization > opens the v2 GET download/d1 to the bot's people only, as v1
+- server/browser-live-routes.test.ts > live browser route authorization > opens the v2 POST upload?chooser=c1 to the bot's people only, as v1
+- server/cloud-computer-background.test.ts > background commands with the included Boat's relay > propagates cancellation during a follow-up status read
+- server/cloud-computer-background.test.ts > background commands with your own Boat key > propagates cancellation during a follow-up status read
+- server/cloud-lent-screen.e2e.test.ts > lets an Auto conversation pinned to the cloud computer use the person's lent PC, and says how
+- server/cloud-personal-slack.e2e.test.ts > a line written while the bot works waits in the queue and runs after, as its own turn
+- server/comms.test.ts > routine comms e2e on the job runtime (fake ACP fleet) > gives a delegated teammate's turn the agents integration with the one tool surface
+- server/control-omb.test.ts > control-omb isolated verification loop > launches, drives a real fake-engine turn, and removes only its test data
+- server/delta-context.e2e.test.ts > keeps provenance and exactly-once delivery across rework rounds to the same teammate
+- server/group-local-vm.e2e.test.ts > Group Local VM ownership on the real isolated server > mounts a channel speaker's own This computer destination behind the control gate
+- server/headless-cli.e2e.test.ts > openmausbot headless: team apply → run --wait job → export > rehearses a launch with a Chief and two teammates and exports what they made
+- server/hosted-desktop.e2e.test.ts > keeps the bot's own engine on the cloud computer, and a failed place never breaks the bot
+- server/long-running-chief.e2e.test.ts > carries a consult-and-implement job over several teammate turns, through a step cap, to one final answer
+- server/person-names.e2e.test.ts > names people choose on a self-hosted server > labels each signed-in person's lines with the name they chose, while the owner's computer keeps the profile's
+- server/phone-relay.test.ts > phones through MausBot Relay on a server > ends a stream that stalls in its request headers or body
+- server/replay-tool-history.e2e.test.ts > names earlier tool calls in a rebuilt session only when switched on
+- server/steer-e2e.test.ts > mid-turn steering e2e > a message sent with followUp: queue during a Claude turn waits for it instead of steering, then runs as its own turn
+- server/turn-clock.e2e.test.ts > stamps every direct and room turn with the time it was sent
+- server/verification-fixture.e2e.test.ts > keeps the fixture blind to this machine's installed CLIs (#2035)
+
+## Ours (121)
+- scripts/testing/cron-routines-ui.e2e.test.ts > creates monthly routines, validates cron, preserves arbitrary expressions and excludes calls
+- scripts/testing/duration-sequencer.test.ts > vitest shard balance > logs its split, and annotates a CI run whose weights match no files
+- scripts/testing/duration-sequencer.test.ts > vitest shard balance > weighs only test files that exist, for each CI platform
+- server/brand.test.ts > brand.json > is the default brand when no file exists, pointing at where one would go
+- server/grok-move-mcp.test.ts > the move MCP a Bot in Grok Bot talks to > keeps a sent Bot as the importer reads it, whether it came as an object or as JSON text, and counts it in the status
+- server/grok-move-mcp.test.ts > the move MCP a Bot in Grok Bot talks to > shakes hands on a version it knows, answers a ping and takes a notification without a reply
+- server/grok-move-tunnel.test.ts > the Grok Bot link > opens one quick tunnel to a listener of its own, hands over what a Bot sent, and closes both when ended
+- server/host/fill-login-turn.test.ts > fill_login outside the bot's own browser > says plainly why a saved login is not filled on a screen when the run can move
+- server/host/fill-login-turn.test.ts > fill_login outside the bot's own browser > says plainly why a saved login is not filled on a screen when the run cannot move
+- server/host/fill-login-turn.test.ts > fill_login outside the bot's own browser > says plainly why a saved login is not filled on a screen when the run has no browser here
+- server/hosted-access.test.ts > hosted bridge in the full server > accepts a portal session, enforces outages/demotion, and issues only current permissions on reauthentication
+- server/hosted-access.test.ts > hosted bridge in the full server > closes an existing quiet event stream within fifteen seconds of remote revocation
+- server/hosted-access.test.ts > hosted bridge in the full server > grants only new local Full tasks under the explicit hosted policy and preserves defaults and existing tasks
+- server/hosted-access.test.ts > hosted bridge in the full server > keeps an Azure Live call to a workspace admin, in plain words, and never takes a local request for one
+- server/hosted-access.test.ts > hosted bridge in the full server > loads the optional hook before listening, redirects hosted navigation, and disables legacy sign-in
+- server/hosted-access.test.ts > hosted bridge in the full server > offers the Slack management link for real agents to hosted admins and members, without sharing credentials
+- server/hosted-access.test.ts > hosted bridge in the full server > treats a session-less local caller as a service by default: the Slack worker's calls work, admin changes need a session
+- server/hosted-access.test.ts > hosted bridge in the full server > uses explicit portal membership without local allow-list synchronization and still revokes quiet streams
+- server/hosted-access.test.ts > hosted bridge in the full server > withdraws hosted readiness the moment the running server's license grace period ends
+- server/hosted-models-api.test.ts > hosted model policy in the full runtime > advertises only assignments and reconciles saved choices without changing conversation history
+- server/index.test.ts > harness HTTP API > rejects non-loopback authorities while accepting IPv4 and IPv6 loopback forms
+- server/testing/worker-port.test.ts > leaves no suite picking a raw random port another worker could pick too
+- src/components/automations/automations.test.ts > on a Cloud > never asks the person to keep the app open for another app's automation
+- src/components/BotSettingsDialog.simple.test.ts > the avatar editor > resets the mascot as the Advanced card does
+- src/components/BotSettingsDialog.simple.test.ts > the avatar editor > shows the ten bodies and twelve colors, with the festival bodies and the faces behind More looks
+- src/components/CallView.availability.test.ts > call capability guidance > distinguishes a broken local speech service from an unsupported device
+- src/components/CallView.availability.test.ts > call capability guidance > tells a browser user only taking turns needs the desktop app
+- src/components/CallView.journeys.test.ts > calling a bot off the Mac > in a browser with no microphone support, says how to make the call, and no key is asked for
+- src/components/cloud-welcome/CloudWelcome.test.ts > CloudWelcome > in an older app that still copies by hand, says to update it to bring the bots here by itself
+- src/components/cloud-welcome/CloudWelcome.test.ts > CloudWelcome > in the app on a Cloud of the person's own, the folders card says this computer's files are used by themselves, with nothing to press
+- src/components/cloud-welcome/CloudWelcome.test.ts > CloudWelcome > opens on bringing this computer's stuff, before any chat: a fresh start, with nothing to copy by hand
+- src/components/cloud-welcome/WelcomeBring.test.ts > the first setup step's promise > on My Cloud, says it as before
+- src/components/CloudAccountSettings.test.ts > a free account may add a Cloud, and is told what to do if it bought with another email
+- src/components/CloudAccountSettings.test.ts > on My Cloud once it is home, Settings is that app's own: the plan is managed on the Plan page, never in another app
+- src/components/CloudAccountSettings.test.ts > on the person's own Cloud, Settings shows the plan read only, with Manage, and Sign in again once this computer's sign-in ended
+- src/components/CloudAccountSettings.test.ts > only shows the status of a Cloud that is not Ready, and a later sign-out starts nothing
+- src/components/CloudAccountSettings.test.ts > sign-out asks first, says what keeps running, and Cancel keeps you signed in
+- src/components/CompanyBackupSettings.test.ts > optional Company cloud backup settings > keeps pending-restore authority when the cloud list fails (late state: false)
+- src/components/CompanyBackupSettings.test.ts > optional Company cloud backup settings > keeps pending-restore authority when the cloud list fails (late state: true)
+- src/components/CompanyBackupSettings.test.ts > optional Company cloud backup settings > shows restart instructions and no backup actions when a restore is already staged
+- src/components/CompanyBackupSettings.test.ts > optional Company cloud backup settings > validates the selected backup before exact REPLACE and saves recovery identity before requesting replacement
+- src/components/ComputerAskCard.test.ts > a bot's ask to turn on what it needs from the person's computer > when the app there is the fix, links to it instead of a Turn on that can't work
+- src/components/ComputerPanel.browser.test.ts > Computer panel Works on > lists neither on My Cloud, and says why
+- src/components/ComputerPanel.takeover.test.ts > taking control of a Local VM > a desktop that never comes up gives the computer back and says so
+- src/components/DecisionModelSettings.test.ts > DecisionModelSettings > with OpenRouter > maps every OpenRouter failure to a fixed sentence
+- src/components/EngineSetup.refresh.test.ts > says plainly when the engine now runs the copy the app installed
+- src/components/EngineSetup.test.ts > API-key engine setup > has no button on a remote client, whose settings hide the keys
+- src/components/EngineSetup.test.ts > install from Settings on the server > finishes the app's own signed-out copy in the app, never in a terminal
+- src/components/EnginesSettings.app-copy.test.ts > forgets the notice when the person leaves Settings
+- src/components/EnginesSettings.app-copy.test.ts > keeps saying OpenCode now runs the app's copy once the switched copy is Ready, until dismissed
+- src/components/EnginesSettings.test.ts > Settings → Engines → setup cards > keeps an API-key engine listed after its key is saved, with the key masked and Replace beside it
+- src/components/ImportSettings.test.ts > Settings → Import > says what happened: looking, nothing new, not this computer, or the result
+- src/components/LocalComputerSection.test.ts > Local VM inventory UI > shows unmanaged containers without offering an unsafe delete action
+- src/components/LocalComputerSection.test.ts > VPS computer inventory UI > keeps disconnected, unavailable, and empty states distinct
+- src/components/MacLocalControl.test.ts > Mac local computer status > shows the recorded Accessibility failure and its matching recovery actions
+- src/components/onboarding/beats/OrganisationRow.test.ts > organisation sign-in row in the welcome flow > can cancel a sign-in in progress
+- src/components/onboarding/beats/OrganisationRow.test.ts > organisation sign-in row in the welcome flow > offers sign-in without starting it, and never touches Settings' own acknowledgement
+- src/components/onboarding/WelcomeFlow.test.ts > a new install's first run > is two screens with an AI already working: Next, then Create, and it lands in the Chief's chat
+- src/components/onboarding/WelcomeFlow.test.ts > other first runs > gives a hosted place's admin the first screen only, then the chat
+- src/components/onboarding/WelcomeFlow.test.ts > with no AI working yet > keeps the screen's shape: the pill signs in, and the line under it offers other ways or later
+- src/components/onboarding/WelcomeFlow.test.ts > with no AI working yet > moves on with Escape, and Enter presses the pill, never past an AI still to connect
+- src/components/onboarding/WelcomeFlow.test.ts > with no AI working yet > opens every other way in the Connect an AI dialog, where OpenCode's free model is only a backup
+- src/components/onboarding/WelcomeGate.test.ts > who gets the welcome flow > gives a hosted member a note instead, and nothing that writes the workspace config
+- src/components/PhoneDevicesSection.page.test.ts > Pair a device > asks how the phone will reach this computer, as two choices with Same Wi-Fi first, before anything listens
+- src/components/PhoneDevicesSection.page.test.ts > Phone & devices > with nothing paired and no way in on, shows one task: pair, with where to get the app in plain words and the ways in folded into one row
+- src/components/PhoneDevicesSection.page.test.ts > route words > reads a route's state and the reach line in plain words
+- src/components/PhoneSetupFlow.publicNetwork.test.ts > the pairing code > is the only code on screen and says to scan it inside the app
+- src/components/PlacesRail.test.ts > Connect to a server says how another computer's desktop app is opened from here: its Your other computers link, or My Cloud
+- src/components/RemoteAccessCheck.test.ts > the connection check > in Settings, shows the headline closed, and the steps and Copy diagnostics open
+- src/components/RemoteAccessCheck.test.ts > the connection check > under the pairing screen's failure message, lists the steps without a second headline
+- src/components/RemoteComputerSection.test.ts > remote connection Settings > preserves six-digit companion pairing when the server bridge is unavailable
+- src/components/RoutineCalendarPage.simple.test.ts > routine editor > shows a saved startup choice when the simple editor opens
+- src/components/SecretRequestCard.test.ts > SecretRequestCard custom secrets > says what the bot may do with it, in the bot's words and plainly, with no key link
+- src/components/ServerPairingCard.computer.dom.test.ts > shows another computer the address with the code, and makes Copy link the main button
+- src/components/ServerPairingCard.test.ts > pairing devices from a hosted server's settings > on an OMB Cloud home, which is personal, offers no chat-only choice, lists only the owner's devices, and says why in one line
+- src/components/settings/SettingsWindow.test.ts > the Settings window > says which place a place page changes, and that account and app pages stay the same, without “place” for a person with one place
+- src/components/SettingsModal.updates.test.ts > shows this app's update where the desktop app answers, with no Download step
+- src/components/SidebarProfileMenu.test.ts > updateLabel > distinguishes native preparation from restart readiness
+- src/components/SidebarProfileMenu.test.ts > updateLabel > names the version it is ready to install
+- src/components/SidebarProfileMenu.updates.test.ts > offers the restart once an update has downloaded by itself
+- src/components/SignInRequestCard.test.ts > SignInRequestCard while it waits > leads with the site, quotes the bot's reason, and offers Open, Done and Cancel
+- src/components/SignInRequestCard.test.ts > SignInRequestCard while it waits > says the host computer, not this one, where this computer is somewhere else
+- src/components/TeamPhoneCard.test.ts > Open on your phone, on a Team Cloud: the phones it opened > says when there is none yet, and shows the phone that scans the code without a reload
+- src/components/UpdateBanner.updated.test.ts > the line after the app updated itself > gives way to an update that is ready again
+- src/components/UpdateBanner.updated.test.ts > the line after the app updated itself > waits until the person looks at the window, says it once, and is then forgotten
+- src/components/UpdateIndicator.test.ts > the update button > says what it holds
+- src/components/UpdateIndicator.test.ts > the update card > opens centred with the version, highlights and Restart to update, which installs
+- src/components/UpdateIndicator.test.ts > the update card > says the update installs by itself the next time the person is away, and still offers Restart
+- src/components/UpdatesConsent.test.ts > Settings → General: Product updates by email > reflects the account's answer, and turning it off withdraws; on again is one tap when signed in
+- src/components/WorkspaceBackupSettings.test.ts > Settings full backups > does not restore client state before restart, then replaces only the initiating browser's allowlist
+- src/components/WorkspaceBackupSettings.test.ts > Settings full backups > keeps recovery intact and offers a retry when native restart fails (Error: Fixture restart unavailable)
+- src/components/WorkspaceBackupSettings.test.ts > Settings full backups > keeps recovery intact and offers a retry when native restart fails (false)
+- src/components/WorkspaceBackupSettings.test.ts > Settings full backups > uploads a raw file, validates it, and requires exact REPLACE with the staged ID
+- src/lib/brand.test.ts > brand > names the product MausBot, or a white-label brand file by its own name
+- src/lib/brand.test.ts > index.html starts with the product's name as its title
+- src/lib/brand.test.ts > rail.html starts with the product's name as its title
+- src/lib/i18n.test.ts > activePackComplete > is true only for a pack other than English that has every English key
+- src/lib/i18n.test.ts > t > fills {app} with the product's name, a white-label brand's own name, or the name a caller passes
+- src/lib/live-call-media.test.ts > a blocked microphone > on a plain-http server's page, which has no microphone at all, offers no web browser
+- src/lib/live-call-media.test.ts > live call media > explains a window without microphone support
+- src/lib/local-computer.test.ts > local computer UI eligibility > keeps This computer selectable on Windows before the driver is live
+- src/lib/local-computer.test.ts > what the person reads about using this computer > says what to do in plain words, never the parts underneath
+- src/lib/mac-cua-permissions.test.ts > macOS CUA permission recovery > names only the grants the host reported missing
+- src/lib/org-library.test.ts > the shelf card > renders cards with Add, Added and update text, and no confirm step
+- src/lib/plain-error.test.ts > plainErrorLine > reads "Failed to fetch" as a plain line
+- src/lib/plain-error.test.ts > plainErrorLine > reads "NetworkError when attempting to fetch resource." as a plain line
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > asks to sign in when signed out, or when the relay refused this computer's sign-in
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > copies the steps, what to try and the facts as one block
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > maps the account's control-plane codes to plain reasons
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > names the account when MausBot can't be reached, and still finds Same Wi-Fi working
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > names the relay when it is off for this computer, busy, silent, or taken over
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > passes every step when the relay confirmed this computer
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > reads a build with no control plane as not set up, not as a failure
+- src/lib/remote-access-diagnosis.test.ts > the remote access diagnosis > stops at this computer when the phone link is off, and checks nothing after it
+- src/lib/routine-display.test.ts > where a routine runs > on a desktop, a routine starts while MausBot is open there
+- src/lib/server-update.test.ts > self-hosted update row > explains servers that are updated elsewhere
+- src/lib/server-update.test.ts > the update row for another server the app shows > keeps the rows of servers updated for their owner, and the row of this computer
+- src/lib/title-at-boot.test.ts > the window's name at boot > is the product's name before the brand file is asked for
+- src/pair/PairPage.test.ts > a team's Cloud is called by the team's name, a person's own Cloud My Cloud
+- src/pair/PairPage.test.ts > My Cloud says where its connection starts, never 'the code shown on the server'
+- src/pair/PairPage.test.ts > opening My Cloud from the app needs no click and no code to type

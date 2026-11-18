@@ -4,7 +4,7 @@
 - [x] Mascot set (11-18): Squibbles + Builder, QA, Coder in `mascots/final/`; format in `bot-format.md`. App icons, favicon, welcome logo and the default bot avatar now show Squibbles.
 - [x] Builder / QA / Coder pickable (11-18): a "Crew" row in the bot look picker. Picture files are keyed by body + color (`cursor-coral-*` = Builder, `cursor-yellow-*` = QA, `cursor-blue-*` = Coder, plain `cursor-*` = Squibbles on chrome). Reset now returns to Squibbles (was green).
 - [x] DMG install art (11-18): Maus family swapped for Builder, QA, Coder (`build/dmg/crew/*.png`, inlined by `render.mjs`). The app icon is Squibbles, so he is the one you drag in.
-- [ ] 4 brand tests fail since the rename commit f47e9b2 (they expect "MausBot" and the old page titles); part of the full rebrand.
+- [ ] Full suite (11-18): ~106 tests expect old brand text, 12 test deleted enterprise/ code; 34 more fail on upstream too (this Mac). Breakdown: `rebrand/test-triage-2026-11-18.md`. Fix the 118 during the full rebrand.
 - [ ] Full ~32 h rebrand (census.md), updater feed to our fork, PostHog off.
 
 ## Jon, 11-18 (after seeing the app: "so fucking baller")

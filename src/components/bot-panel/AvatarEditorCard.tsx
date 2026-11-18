@@ -158,7 +158,7 @@ export function AvatarEditorCard({ bot, activeState, onPatch, onClose }: {
                     type="button"
                     disabled={busy}
                     aria-pressed={picked}
-                    aria-label={t("mascot.useBody", { name })}
+                    aria-label={t("mascot.useLook", { name })}
                     title={name}
                     onClick={() => pickMascot({ mascotBody: "cursor", color, mascotFaceColor: null })}
                     className={cn(

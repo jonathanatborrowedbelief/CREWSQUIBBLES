@@ -8764,6 +8764,7 @@
   "mascot.useExpression": "Use {expression} expression",
   "mascot.useColor": "Use {color} mascot color",
   "mascot.useBody": "Use the {name} body",
+  "mascot.useLook": "Use the {name} look",
   "mascot.label": "{name} mascot",
   "avatar.alt": "{name} avatar",
   "avatar.altFallback": "Bot avatar",

@@ -15,7 +15,7 @@ Paste into a fresh session: "Read ~/Workspace/OpenMausBot/rebrand/RESUME-PROMPT-
    - **Phone** → `rebrand/phone-research.md`. MausBot's App Store app (id6803387923) should pair over Wi-Fi/Tailscale but shows MausBot. Cheapest CREW option: phone web app over Tailscale ($0). A real CREW iPhone app = new client + $99/yr Apple. Quick fix: reword the false "Install CREW from the App Store" lines (`en.json:4925, 4926, 10970`).
    - **Finish the rebrand** (MausBot/OpenMausBot/Electron still visible).
    Give Jon the 10-line morning summary, then ask which to start.
-2. 4 brand tests expect "MausBot" (known since f47e9b2); fix during the full rebrand.
+2. Full test suite (11-18): ~106 tests expect old brand text, 12 test the deleted enterprise/ code, 34 fail on upstream too (this Mac's setup). Crew-row test breaks fixed. Breakdown: `rebrand/test-triage-2026-11-18.md`. Fix the 118 during the full rebrand.
 3. Still says MausBot/OpenMausBot: default bot name ("Hey! I'm MausBot"), menu bar/app name, DMG file name, productName in `electron-builder.yml`. Part of the full ~32 h rebrand (`census.md`).
 4. Parked: high-contrast palette, updater feed → our fork, PostHog off (`update-pipeline.md`).
 

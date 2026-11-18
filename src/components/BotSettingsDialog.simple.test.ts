@@ -512,6 +512,7 @@ describe("the avatar editor", () => {
     const bot = makeBot();
     const rendered = editor(bot);
     expect(rendered.html.match(/aria-label="Use the \w+ body"/g)).toHaveLength(10);
+    expect(rendered.html.match(/aria-label="Use the \w+ look"/g)).toHaveLength(4);
     expect(rendered.html.match(/aria-label="Use \w+ mascot color"/g)).toHaveLength(12);
     expect(rendered.html).not.toContain(">Halloween<");
     expect(rendered.html).not.toContain(">Diwali<");
@@ -566,7 +567,7 @@ describe("the avatar editor", () => {
 
   it("resets the mascot as the Advanced card does", () => {
     click(find(editor(makeBot()), "data-avatar-reset"));
-    expect(patch).toHaveBeenLastCalledWith({ avatarCrop: "mascot", color: "green", mascotExpression: null, mascotBody: "cursor", mascotFaceColor: null });
+    expect(patch).toHaveBeenLastCalledWith({ avatarCrop: "mascot", color: "chrome", mascotExpression: null, mascotBody: "cursor", mascotFaceColor: null });
   });
 
   it("edits facial feature color without changing body color or expression", () => {
