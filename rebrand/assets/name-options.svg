@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" width="900" height="640">
+<rect width="900" height="640" fill="#141414"/>
+<g font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<text x="40" y="44" font-size="16" fill="#8a8a8a" letter-spacing="2">1 · AIS</text>
+<rect x="40" y="70" width="110" height="110" rx="24" fill="#1c1c1c" stroke="#d4a745" stroke-opacity=".5" stroke-width="3"/>
+<text x="62" y="148" font-family="Menlo, monospace" font-weight="700" font-size="60" fill="#d4a745">$</text><rect x="100" y="132" width="30" height="14" rx="2" fill="#d4a745"/>
+<text x="180" y="160" font-weight="800" font-size="92" fill="#ffffff" letter-spacing="6">AIS</text>
+<text x="420" y="160" font-size="28" fill="#d4a745">by Jon</text>
+
+<text x="40" y="254" font-size="16" fill="#8a8a8a" letter-spacing="2">2 · AISYNC  (say "ay-sink")</text>
+<rect x="40" y="280" width="110" height="110" rx="24" fill="#1c1c1c" stroke="#d4a745" stroke-opacity=".5" stroke-width="3"/>
+<text x="62" y="358" font-family="Menlo, monospace" font-weight="700" font-size="60" fill="#d4a745">$</text><rect x="100" y="342" width="30" height="14" rx="2" fill="#d4a745"/>
+<text x="180" y="370" font-weight="800" font-size="92" fill="#ffffff">AI<tspan fill="#d4a745">sync</tspan></text>
+
+<text x="40" y="464" font-size="16" fill="#8a8a8a" letter-spacing="2">3 · AISTRA</text>
+<rect x="40" y="490" width="110" height="110" rx="24" fill="#1c1c1c" stroke="#d4a745" stroke-opacity=".5" stroke-width="3"/>
+<text x="62" y="568" font-family="Menlo, monospace" font-weight="700" font-size="60" fill="#d4a745">$</text><rect x="100" y="552" width="30" height="14" rx="2" fill="#d4a745"/>
+<text x="180" y="580" font-weight="800" font-size="92" fill="#ffffff">AI<tspan fill="#d4a745">stra</tspan></text>
+</g></svg>

@@ -38,9 +38,11 @@ export const brandSchema = z
 
 export type Brand = z.infer<typeof brandSchema>;
 
-export const DEFAULT_BRAND: Brand = { name: "OpenMausBot" };
+const AIS_CREW_MARK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0iIzE0MTQxNCIvPjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjQ5MiIgaGVpZ2h0PSI0OTIiIHJ4PSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q0YTc0NSIgc3Ryb2tlLW9wYWNpdHk9Ii40IiBzdHJva2Utd2lkdGg9IjgiLz48dGV4dCB4PSIxMTgiIHk9IjM0NCIgZm9udC1mYW1pbHk9Ik1lbmxvLCBTRiBNb25vLCBtb25vc3BhY2UiIGZvbnQtd2VpZ2h0PSI3MDAiIGZvbnQtc2l6ZT0iMjYwIiBmaWxsPSIjZDRhNzQ1Ij4kPC90ZXh0PjxyZWN0IHg9IjI5MCIgeT0iMzAwIiB3aWR0aD0iMTA0IiBoZWlnaHQ9IjQ0IiByeD0iNiIgZmlsbD0iI2Q0YTc0NSIvPjwvc3ZnPgo=";
+
+export const DEFAULT_BRAND: Brand = { name: "Crew", tagline: "by AI Systems by Jon", accent: "#d4a745", logo: AIS_CREW_MARK, favicon: AIS_CREW_MARK };
 /** The product's name wherever a person reads it. OpenMausBot names only the open-source project and its repository. */
-export const PRODUCT_NAME = "MausBot";
+export const PRODUCT_NAME = "Crew";
 
 export interface BrandStatus {
   brand: Brand;
