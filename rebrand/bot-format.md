@@ -1,6 +1,6 @@
-# Crew bot format
+# CREW bot format
 
-Every Crew bot follows this format. The master image is `mascots/final/crew-master.png`.
+Every CREW bot follows this format. The master image is `mascots/final/crew-master.png`.
 
 ## One bot = one job + one color + one tool
 - **Role:** one job, said in a word or two (Director, Coder, QA, Builder).
