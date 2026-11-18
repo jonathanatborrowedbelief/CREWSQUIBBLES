@@ -10,7 +10,11 @@ Paste into a fresh session: "Read ~/Workspace/OpenMausBot/rebrand/RESUME-PROMPT-
 - **Installer art:** `build/dmg/background.svg` shows Builder (bottom left), Coder (by the door), QA (bottom right); pictures in `build/dmg/crew/`, inlined by `node build/dmg/render.mjs`.
 
 ## Open items (also rebrand/TODO.md)
-1. Jon is looking at the launched app; take his notes first.
+1. Jon saw the app (11-18 ~00:50): "so fucking baller". His next asks, research done and pushed (ce890bd):
+   - **Share with his buddy** → `rebrand/sharing-research.md`. Pick: trial on Jon's Mac over Tailscale (~30 min), then a VPS running OUR Docker build + own domain + pairing codes (~2-4 h). Never run upstream's `deploy/install.sh` (installs upstream's image). Both share one engine login — check subscription terms or use an API key.
+   - **Phone** → `rebrand/phone-research.md`. MausBot's App Store app (id6803387923) should pair over Wi-Fi/Tailscale but shows MausBot. Cheapest CREW option: phone web app over Tailscale ($0). A real CREW iPhone app = new client + $99/yr Apple. Quick fix: reword the false "Install CREW from the App Store" lines (`en.json:4925, 4926, 10970`).
+   - **Finish the rebrand** (MausBot/OpenMausBot/Electron still visible).
+   Give Jon the 10-line morning summary, then ask which to start.
 2. 4 brand tests expect "MausBot" (known since f47e9b2); fix during the full rebrand.
 3. Still says MausBot/OpenMausBot: default bot name ("Hey! I'm MausBot"), menu bar/app name, DMG file name, productName in `electron-builder.yml`. Part of the full ~32 h rebrand (`census.md`).
 4. Parked: high-contrast palette, updater feed → our fork, PostHog off (`update-pipeline.md`).
