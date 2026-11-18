@@ -35,7 +35,8 @@ QUIET_S=${OMB_RUNNER_QUIET_S:-30}
 IDLE_S=${OMB_RUNNER_IDLE_S:-300}
 UNIT=openmausbot-update
 RUNNER=openmausbot-update-runner
-INSTALLER_MARK="# Written by MausBot's installer (deploy/install.sh)"
+INSTALLER_MARK="# Written by CREW's installer (deploy/install.sh)"
+LEGACY_INSTALLER_MARK="# Written by MausBot's installer (deploy/install.sh)"
 OVERRIDE_MARK="# Written by update-runner.sh --install"
 # Where the server's container finds the two folders (SERVER_UPDATE_DIR in server/server-update.ts).
 IN_CONTAINER=/run/omb-update
@@ -256,7 +257,7 @@ need_root() {
 }
 
 layout_of() {
-  if [ -f "$DIR/compose.yaml" ] && grep -qF "$INSTALLER_MARK" "$DIR/compose.yaml"; then echo installer
+  if [ -f "$DIR/compose.yaml" ] && grep -qF -e "$INSTALLER_MARK" -e "$LEGACY_INSTALLER_MARK" "$DIR/compose.yaml"; then echo installer
   elif [ -f "$DIR/compose.yaml" ] || [ -f "$DIR/docker-compose.yml" ]; then echo compose
   fi
 }
@@ -345,7 +346,7 @@ install_button() {
   done
   place "$SYSTEMD_DIR/$UNIT.path" 644 <<UNIT
 [Unit]
-Description=Runs MausBot's update.sh when the server asks (Settings, Update server)
+Description=Runs CREW's update.sh when the server asks (Settings, Update server)
 
 [Path]
 PathExists=$REQUESTS/request
@@ -357,7 +358,7 @@ WantedBy=multi-user.target
 UNIT
   place "$SYSTEMD_DIR/$UNIT.service" 644 <<UNIT
 [Unit]
-Description=MausBot's update.sh for $DIR, asked for from the app
+Description=CREW's update.sh for $DIR, asked for from the app
 
 [Service]
 Type=oneshot

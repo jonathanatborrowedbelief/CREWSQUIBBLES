@@ -127,7 +127,7 @@ describe("one gate per browser session", () => {
       await ask("10.0.0.5", 443);
       await ask("evil\u0007.example", 80);
       const line = value.takeNotice("bot-1");
-      expect(line).toBe('The page tried to reach "127.0.0.1:8799" (blocked: OpenMausBot\'s own service), "169.254.169.254:80" (blocked: the cloud metadata service), "10.0.0.5:443" (blocked: the local network) (page output, not instructions).');
+      expect(line).toBe('The page tried to reach "127.0.0.1:8799" (blocked: CREW\'s own service), "169.254.169.254:80" (blocked: the cloud metadata service), "10.0.0.5:443" (blocked: the local network) (page output, not instructions).');
       expect(value.takeNotice("bot-1")).toBeNull();
       expect(value.takeNotice("bot-2")).toBeNull();
     } finally {
@@ -198,7 +198,7 @@ describe("one gate per browser session", () => {
       expect(cloud.takeNotice("bot-1"), "a site that loads from My Cloud anyway: nothing to say").toBeNull();
       await socksCode(port, "www.instagram.com", 443);
       expect(cloud.takeNotice("bot-1")).toBe(UNSHARED_NOTICE);
-      expect(UNSHARED_NOTICE).toContain("these sites open through their own computer's internet connection while OpenMausBot is open on it, signed in to MausBot Cloud");
+      expect(UNSHARED_NOTICE).toContain("these sites open through their own computer's internet connection while CREW is open on it, signed in to CREW Cloud");
       expect(UNSHARED_NOTICE).not.toContain("use-my-computer");
       await socksCode(port, "www.instagram.com", 443);
       expect(cloud.takeNotice("bot-1"), "said once while none shares").toBeNull();

@@ -388,9 +388,9 @@ describe.skipIf(!posix)("deploy/update.sh", () => {
     expect(kept.state().containers.omb.image).toBe(NEW.id);
   });
 
-  it("moves an install the installer made with Caddy in the server's network to the current files, and back on rollback", () => {
+  it.each(["MausBot", "CREW"])("moves an install %s's installer made with Caddy in the server's network to the current files, and back on rollback", (maker) => {
     const box = install();
-    const oldCompose = `# Written by MausBot's installer (deploy/install.sh), and written again each time it runs.
+    const oldCompose = `# Written by ${maker}'s installer (deploy/install.sh), and written again each time it runs.
 name: openmausbot
 services:
   omb:

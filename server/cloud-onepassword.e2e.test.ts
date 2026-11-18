@@ -76,7 +76,7 @@ exports.createClient = async ({ auth }) => {
   if (auth.length < 24) throw new Error("invalid user input: encountered the following errors: service account token had invalid format");
   if (auth !== TOKEN) throw new Error("error authenticating: invalid service account token");
   return {
-    vaults: { list: async () => [{ id: "v1", title: "Shared with OpenMausBot" }] },
+    vaults: { list: async () => [{ id: "v1", title: "Shared with CREW" }] },
     items: {
       list: async () => [{ id: "i1", title: "CRM", category: "Login", websites: [{ url: "https://crm.example.test/login" }] }],
       getAll: async (vaultId, ids) => ({ individualResponses: ids.map((id) => ({ content: { id, fields } })) }),
@@ -186,7 +186,7 @@ it("connects a 1Password service account on a Cloud home, and says plainly what 
   expect((await api("POST", "/api/logins/1password", { token: `ops_wrong-${"x".repeat(30)}` })).body.error).toBe(ONE_PASSWORD_REFUSED);
   expect((await api("POST", "/api/logins/1password", { token: "ops_short" })).body.error).toMatch(/^That is not a whole 1Password service account token/u);
   const connected = await api("POST", "/api/logins/1password", { token: TOKEN });
-  expect(connected, log).toMatchObject({ status: 200, body: { onePassword: { connected: true, vaults: [{ id: "v1", title: "Shared with OpenMausBot", items: 1 }], items: 1 } } });
+  expect(connected, log).toMatchObject({ status: 200, body: { onePassword: { connected: true, vaults: [{ id: "v1", title: "Shared with CREW", items: 1 }], items: 1 } } });
   expect((await api("GET", "/api/logins")).body.logins).toEqual([expect.objectContaining({ site: "example.test", username: "person@example.test", source: "1password" })]);
   expect(log).not.toContain("SDK did not load");
   expect(log).not.toContain("not available in this build");

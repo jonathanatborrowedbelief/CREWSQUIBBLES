@@ -187,7 +187,7 @@ readline.createInterface({ input: process.stdin }).on("line", (line) => {
     expect((await api("PATCH", `/api/mcp/servers/${name}`, { token: owner, body: { enabled: true } })).status).toBe(200);
   }
   const notYet = await api("POST", "/api/mcp/servers/local/test", { token: owner });
-  expect(notYet).toEqual({ status: 409, body: { error: "local runs on Ada's Mac, which isn't lent to My Cloud: it works once OpenMausBot is open on that computer and signed in to My Cloud." } });
+  expect(notYet).toEqual({ status: 409, body: { error: "local runs on Ada's Mac, which isn't lent to My Cloud: it works once CREW is open on that computer and signed in to My Cloud." } });
 
   // The Mac lends itself to My Cloud through the real connector, terminal off as lending starts.
   const env = { id: "my-cloud", name: "My Cloud", origin: base };
@@ -234,7 +234,7 @@ readline.createInterface({ input: process.stdin }).on("line", (line) => {
   macServerPorts = [Number(new URL(macUrl).port)];
   const reached = macRequests.length;
   const own = await call("tools/call", { name: "search_notes", arguments: { q: "plan" } });
-  expect(own.result).toEqual({ content: [{ type: "text", text: "Only an MCP server on its own port (1024 or higher) at this computer's address can be reached, never this computer's own OpenMausBot or Chrome ports" }], isError: true });
+  expect(own.result).toEqual({ content: [{ type: "text", text: "Only an MCP server on its own port (1024 or higher) at this computer's address can be reached, never this computer's own CREW or Chrome ports" }], isError: true });
   expect(macRequests.length).toBe(reached);
   macServerPorts = [];
 
@@ -262,7 +262,7 @@ readline.createInterface({ input: process.stdin }).on("line", (line) => {
   connector.pause();
   await expect.poll(async () => (await api("POST", "/api/mcp/servers/local/test", { token: owner })).status, { timeout: 8000 }).toBe(409);
   const paused = await api("POST", "/api/mcp/servers/local/test", { token: owner });
-  expect(paused.body.error).toMatch(/^local runs on .+, which no longer lends itself to My Cloud: OpenMausBot on it is paused or signed out\.$/);
+  expect(paused.body.error).toMatch(/^local runs on .+, which no longer lends itself to My Cloud: CREW on it is paused or signed out\.$/);
   const before = macRequests.length;
   const refused = await call("tools/call", { name: "search_notes", arguments: { q: "plan" } });
   expect(refused.result.isError).toBe(true);

@@ -606,6 +606,21 @@ describe("phone setup flow", () => {
     ).toBe(`${busy} Reference: ${requestId}.`);
   });
 
+  it("keeps the network-unavailable explanation under the old and the new product name", () => {
+    for (const brand of ["OpenMausBot", "CREW"]) {
+      const text = `${brand} could not reach its secure connection service. Check your internet and try again.`;
+      expect(
+        normalizePhoneSetupActionError(
+          new Error(`Error invoking remote method 'companion-account:request-code': Error: ${text}`),
+          "We could not send the code. Try again.",
+        ),
+      ).toBe(text);
+    }
+    expect(
+      normalizePhoneSetupActionError(new Error("Other could not reach its secure connection service."), "We could not send the code. Try again."),
+    ).toBe("We could not send the code. Try again.");
+  });
+
   it("replaces arbitrary IPC details with calm setup copy", () => {
     expect(
       normalizePhoneSetupActionError(

@@ -157,7 +157,7 @@ await import(${JSON.stringify(pathToFileURL(join(SERVER_DIR, "testing", "fake-cl
     },
   }));
   mkdirSync(join(home, "web"));
-  writeFileSync(join(home, "web", "index.html"), "<!doctype html><title>OpenMausBot</title>");
+  writeFileSync(join(home, "web", "index.html"), "<!doctype html><title>CREW</title>");
   relayUrl = relay;
   await boot();
   const body = JSON.stringify({ label: "OpenMausBot app (Cloud)", ttlSeconds: 300 });
@@ -212,7 +212,7 @@ describe("the free trial's Claude credit on a Cloud home", { timeout: 90_000 }, 
     expect(relayed).toContainEqual(expect.objectContaining({ method: "GET", path: `${RELAY_PATH}/v1/models`, bearer: `Bearer ${TOKEN}` }));
   });
 
-  it("answers on Sonnet through the relay's chat completions, on OpenMausBot's own chat engine: never Claude Code, never an Anthropic route", async () => {
+  it("answers on Sonnet through the relay's chat completions, on CREW's own chat engine: never Claude Code, never an Anthropic route", async () => {
     const settled = await turn("hello");
     expect(answered(settled)).toBe(true);
     expect(completions().at(-1)).toMatchObject({ method: "POST", path: `${RELAY_PATH}/v1/chat/completions`, bearer: `Bearer ${TOKEN}`, model: "claude-sonnet-5" });

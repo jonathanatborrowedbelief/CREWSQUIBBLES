@@ -56,7 +56,7 @@ describe("Announcements", () => {
     const teams = rows()[1]!;
     expect(teams.querySelector("time")?.getAttribute("datetime")).toBe("2026-11-17T00:00:00.000Z");
     expect(teams.textContent).toContain("Nov 17, 2026");
-    expect(teams.textContent).toContain("MausBot is better with your team");
+    expect(teams.textContent).toContain("CREW is better with your team");
     expect(teams.textContent).toContain("Show again");
     const hunt = rows().find(row => row.dataset.announcementItem === "product-hunt-launch-2026-10")!;
     expect(hunt.querySelector("[data-announcement-ended]")?.textContent).toBe("Ended");

@@ -2,10 +2,12 @@
   "id": "phone-connection",
   "name": "Phone Connection Help",
   "version": "1.0.0",
-  "description": "Why the MausBot phone app can't reach the person's computer, and what fixes it.",
+  "description": "Why the phone app can't reach the person's computer, and what fixes it.",
   "defaultEnabled": true,
   "triggerTerms": [
     "no route to your computer",
+    "anywhere, through crew",
+    "anywhere through crew",
     "anywhere, through mausbot",
     "anywhere through mausbot",
     "same wi-fi",

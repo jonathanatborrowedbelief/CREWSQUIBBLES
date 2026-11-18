@@ -93,7 +93,7 @@ export function checkCustomerRunJob(message: unknown, by: JobSource): CheckedJob
   if (type === "start") {
     return keys.length === 0
       ? { ok: true, job: { id: shape.job.id, type, args: {} } as unknown as Job }
-      : { ok: false, id: shape.job.id, code: "refused_by_mode", message: "This server is run by its owner: MausBot may start it, but not choose its image or its settings." };
+      : { ok: false, id: shape.job.id, code: "refused_by_mode", message: "This server is run by its owner: CREW may start it, but not choose its image or its settings." };
   }
   const image = (args as Record<string, unknown>).image;
   if (keys.length !== 1 || typeof image !== "string" || !CUSTOMER_HOME_IMAGE.test(image)) {
@@ -252,16 +252,16 @@ const FAILURES: Record<JobErrorCode, string> = {
   interrupted: "The job was interrupted and finished safely.",
   audit_unavailable: "The audit log on the server cannot be written, so nothing was done.",
   refused_by_policy: "The server's policy file does not allow this job.",
-  refused_by_mode: "This server is run by its owner, and this is not a job MausBot may run on it.",
+  refused_by_mode: "This server is run by its owner, and this is not a job CREW may run on it.",
   paused: "The server's admin has paused remote management.",
   image_refused: "The image was refused. Nothing was changed.",
-  no_home: "MausBot is not installed on this server.",
+  no_home: "CREW is not installed on this server.",
   docker: "Docker on the server could not do this.",
   pull_failed: "The image could not be downloaded. Nothing was changed.",
   unhealthy: "The server did not become healthy.",
   update_rolled_back: "The new version did not become healthy. The previous version and its data are back.",
   rollback_failed: "The update failed and the previous version did not come back healthy either.",
-  update_unavailable: "The server's own updater is not installed, so MausBot cannot update it.",
+  update_unavailable: "The server's own updater is not installed, so CREW cannot update it.",
   update_not_started: "The server's own updater did not start the update. Nothing was changed.",
   older_version: "The image is older than the version the server runs, or names no version. Nothing was changed.",
   not_found: "There is no such backup on this server.",
@@ -270,10 +270,10 @@ const FAILURES: Record<JobErrorCode, string> = {
   box_unavailable: "The bot box's security profiles are not installed on this server.",
   transfer_failed: "A transfer failed.",
   self_update_failed: "The connector could not replace itself and was not changed.",
-  unsigned_job: "The job was not signed by MausBot.",
+  unsigned_job: "The job was not signed by CREW.",
   wrong_box: "The job was signed for another server.",
   expired_job: "The job's signature was too old.",
-  pending_box: "The team's Owner has not accepted this server in MausBot yet.",
+  pending_box: "The team's Owner has not accepted this server in CREW yet.",
 };
 const AUDIT_HINT = " The server's admin can read the reason with: mausbot-connector audit";
 

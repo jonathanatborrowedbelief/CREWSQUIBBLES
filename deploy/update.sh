@@ -359,8 +359,9 @@ restore_env() {
 # network then, and stayed in the old, dead one whenever the server restarted without it: HTTPS refused while both
 # containers looked healthy. The installer rewrites its own two files at every run; an update does the same, with the
 # copies below, which are the installer's own (scripts/server-installer.test.ts keeps them equal).
-INSTALLER_MARK="# Written by MausBot's installer (deploy/install.sh)"
-old_installer_layout() { [ -f compose.yaml ] && grep -qF "$INSTALLER_MARK" compose.yaml && grep -q '^ *network_mode: "service:omb"' compose.yaml; }
+INSTALLER_MARK="# Written by CREW's installer (deploy/install.sh)"
+LEGACY_INSTALLER_MARK="# Written by MausBot's installer (deploy/install.sh)"
+old_installer_layout() { [ -f compose.yaml ] && grep -qF -e "$INSTALLER_MARK" -e "$LEGACY_INSTALLER_MARK" compose.yaml && grep -q '^ *network_mode: "service:omb"' compose.yaml; }
 # A Compose file of this repository's (path B) with Caddy in the server's network: `git pull` brings the current one.
 old_repository_layout() { [ -f docker-compose.yml ] && grep -q '^ *network_mode: "service:omb"' docker-compose.yml; }
 move_installer_layout() {
@@ -370,7 +371,7 @@ move_installer_layout() {
 }
 installer_compose() {
   cat <<'COMPOSE'
-# Written by MausBot's installer (deploy/install.sh), and written again each time it runs: put your own settings in
+# Written by CREW's installer (deploy/install.sh), and written again each time it runs: put your own settings in
 # .env beside this file, which the installer keeps. The server only listens on loopback inside its container, and on
 # two Unix sockets in the `edge` volume, which Caddy, in its own container, reaches it through. A request on a socket is
 # always a remote one to the server. Caddy does not share the server's network: a server that restarted on its own came
@@ -402,7 +403,7 @@ services:
       OMB_SIGNIN_MEMBER_EMAILS:
       OMB_SIGNIN_SMTP_URL:
       OMB_SIGNIN_SMTP_FROM:
-      # "1": phones pair by QR through MausBot Relay. Sign in once: docker compose exec omb openmausbot login --relay
+      # "1": phones pair by QR through CREW Relay. Sign in once: docker compose exec omb openmausbot login --relay
       OMB_PHONE_RELAY:
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://127.0.0.1:8799/api/health | grep -q openmausbot"]

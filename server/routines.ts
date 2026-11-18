@@ -306,7 +306,7 @@ export interface RoutineManagerOptions {
 
 const WAKE_HORIZON_MS = 60 * 60_000;
 
-export const ROUTINE_RESTARTED = "OpenMausBot restarted while this routine was running";
+export const ROUTINE_RESTARTED = "CREW restarted while this routine was running";
 const MAX_RUNS = 2_000;
 const earliest = (...times: Array<number | null>): number | null => times.reduce<number | null>((first, at) => at === null ? first : first === null ? at : Math.min(first, at), null);
 function cloneRoutine(routine: Routine): Routine {
@@ -780,7 +780,7 @@ export class RoutineManager {
     const existing = this.webhookRunReceipt(input.webhookId, input.deliveryId);
     if (existing) return existing;
     if (this.options.botState(input.botId) === "missing") {
-      throw Object.assign(new Error("The assigned MAUS no longer exists"), { status: 410 });
+      throw Object.assign(new Error("The assigned bot no longer exists"), { status: 410 });
     }
     const run: RoutineRun = {
       id: randomUUID(), routineId: input.webhookId, routineName: input.webhookName, prompt: input.prompt, target: "bot",

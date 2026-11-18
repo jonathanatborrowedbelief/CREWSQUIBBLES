@@ -1,10 +1,14 @@
 {
   "id": "openmausbot-docs",
-  "name": "OpenMausBot Docs",
+  "name": "CREW Docs",
   "version": "0.1.0",
-  "description": "Answer how OpenMausBot itself is configured, from this install's files and the app's own docs.",
+  "description": "Answer how CREW itself is configured, from this install's files and the app's own docs.",
   "defaultEnabled": true,
   "triggerTerms": [
+    "crew settings",
+    "crew config",
+    "crew 设置",
+    "crew 配置",
     "openmausbot",
     "open mausbot",
     "mausbot settings",

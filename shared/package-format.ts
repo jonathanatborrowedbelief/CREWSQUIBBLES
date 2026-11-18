@@ -39,7 +39,7 @@ export const BOTMRR_MARKDOWN_VERSION = 1;
 export const BOTMRR_FOLDER_VERSION = 2;
 const BOTMRR_MARKDOWN_MAX_BYTES = 1_000_000;
 
-export const NEWER_PACKAGE_MESSAGE = "This file was made by a newer OpenMausBot. Update the app, then import it again.";
+export const NEWER_PACKAGE_MESSAGE = "This file was made by a newer CREW. Update the app, then import it again.";
 
 export type PackageTrust = "file" | "org";
 export type PackageFormatErrorCode = "not_a_package" | "unsupported_version" | "newer_version" | "invalid" | "too_large";
@@ -208,7 +208,7 @@ const exampleSchema = z.object({
 });
 
 const packageDocumentV1Schema = z.object({
-  format: z.literal(PACKAGE_FORMAT, { error: "This is not an OpenMaus package" }),
+  format: z.literal(PACKAGE_FORMAT, { error: "This is not a CREW package" }),
   version: z.literal(PACKAGE_V1_VERSION, { error: "Package version is not supported" }),
   package: z.object({
     id: requiredText(80).regex(/^[a-z0-9][a-z0-9-]*$/, { message: "must be a lowercase slug" }),
@@ -438,7 +438,7 @@ const connectionSchema = z.object({
 });
 
 export const packageDocumentSchema = z.object({
-  format: z.literal(PACKAGE_FORMAT, { error: "This is not an OpenMaus package" }),
+  format: z.literal(PACKAGE_FORMAT, { error: "This is not a CREW package" }),
   version: z.union([z.literal(PACKAGE_V2_VERSION), z.literal(PACKAGE_VERSION)], { error: "Package version is not supported" }),
   package: z.object({
     /** The package slug: its identity across releases. */
@@ -777,7 +777,7 @@ export function parsePackageDocument(value: unknown, options: { trust?: PackageT
     document = upgradeV1(parsePackageV1(value));
   } else {
     if (!value || typeof value !== "object" || Array.isArray(value) || (value as { format?: unknown }).format !== PACKAGE_FORMAT) {
-      throw new PackageFormatError("not_a_package", "This is not an OpenMaus package");
+      throw new PackageFormatError("not_a_package", "This is not a CREW package");
     }
     const version = (value as { version?: unknown }).version;
     if (typeof version === "number" && Number.isInteger(version) && version > PACKAGE_VERSION) {
@@ -802,16 +802,16 @@ export function parsePackageDocument(value: unknown, options: { trust?: PackageT
 export function downgradeToV1(document: PackageDocument):
   { document: PackageDocumentV1; dropped: string[] } | { error: string } {
   const pkg = document.package;
-  if (!pkg.agents.length || !pkg.team) return { error: "Packages without bots cannot be opened by older versions of OpenMausBot." };
+  if (!pkg.agents.length || !pkg.team) return { error: "Packages without bots cannot be opened by older versions of CREW." };
   const referenced = new Set(pkg.agents.flatMap((agent) => agent.skills ?? []));
   const skills = (pkg.skills?.entries ?? []).filter((skill) => referenced.has(skill.name));
   if (skills.length > PACKAGE_V1_MAX_SKILLS) {
-    return { error: `Older versions of OpenMausBot accept at most ${PACKAGE_V1_MAX_SKILLS} skills in a package.` };
+    return { error: `Older versions of CREW accept at most ${PACKAGE_V1_MAX_SKILLS} skills in a package.` };
   }
   const crowded = pkg.agents.find((agent) => (agent.skills?.length ?? 0) > PACKAGE_V1_MAX_SKILLS);
-  if (crowded) return { error: `Older versions of OpenMausBot accept at most ${PACKAGE_V1_MAX_SKILLS} skills per bot (${crowded.key} has more).` };
+  if (crowded) return { error: `Older versions of CREW accept at most ${PACKAGE_V1_MAX_SKILLS} skills per bot (${crowded.key} has more).` };
   const outOfRange = (pkg.routines ?? []).find((routine) => routine.timeoutMinutes !== undefined && (routine.timeoutMinutes < 5 || routine.timeoutMinutes > 240));
-  if (outOfRange) return { error: `Older versions of OpenMausBot accept run limits from 5 to 240 minutes (${outOfRange.key} has ${outOfRange.timeoutMinutes}).` };
+  if (outOfRange) return { error: `Older versions of CREW accept run limits from 5 to 240 minutes (${outOfRange.key} has ${outOfRange.timeoutMinutes}).` };
 
   const dropped: string[] = [];
   if (pkg.publisher) dropped.push("package.publisher");
@@ -859,7 +859,7 @@ export function downgradeToV1(document: PackageDocument):
   try {
     return { document: parsePackageV1({ format: PACKAGE_FORMAT, version: PACKAGE_V1_VERSION, package: v1 }), dropped };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : "This package cannot be written for older versions of OpenMausBot." };
+    return { error: error instanceof Error ? error.message : "This package cannot be written for older versions of CREW." };
   }
 }
 

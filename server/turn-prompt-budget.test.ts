@@ -89,11 +89,11 @@ const PROMPT_BUDGET_BASELINE: Record<string, number> = {
   "claude:volatile-note": 178,
   "codex:direct-chat": 8391,
   "codex:setup-chat": 10787,
-  "codex:resumed-instructions": 213,
-  "codex:volatile-note": 97,
+  "codex:resumed-instructions": 206,
+  "codex:volatile-note": 90,
 };
 
-describe("OpenMausBot's prompt text per turn", () => {
+describe("CREW's prompt text per turn", () => {
   it("stays within its pinned budget", async () => {
     const now = await measured();
     expect(Object.keys(now).sort()).toEqual(Object.keys(PROMPT_BUDGET_BASELINE).sort());
