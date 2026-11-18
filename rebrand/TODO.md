@@ -6,3 +6,8 @@
 - [x] DMG install art (11-18): Maus family swapped for Builder, QA, Coder (`build/dmg/crew/*.png`, inlined by `render.mjs`). The app icon is Squibbles, so he is the one you drag in.
 - [ ] 4 brand tests fail since the rename commit f47e9b2 (they expect "MausBot" and the old page titles); part of the full rebrand.
 - [ ] Full ~32 h rebrand (census.md), updater feed to our fork, PostHog off.
+
+## Jon, 11-18 (after seeing the app: "so fucking baller")
+- [ ] Share one workspace with his buddy, both working remotely on the same project (research: `sharing-research.md`).
+- [ ] Phone: "Pair a phone" says "Install CREW from the App Store". Find out if MausBot's App Store app works with our fork, or what our own CREW iPhone app takes (research: `phone-research.md`).
+- [ ] Finish the rebrand: still says MausBot / OpenMausBot / Electron in places.
