@@ -175,7 +175,7 @@ const ITEMS = ${JSON.stringify(items)};
 exports.createClient = async ({ auth }) => {
   if (auth !== ${JSON.stringify(token)}) throw new Error("error authenticating: invalid service account token");
   return {
-    vaults: { list: async () => [{ id: "v1", title: "Shared with OpenMausBot" }] },
+    vaults: { list: async () => [{ id: "v1", title: "Shared with CREW" }] },
     items: {
       list: async () => ITEMS.map(({ id, title, category }) => ({ id, title, category, websites: [] })),
       getAll: async (vaultId, ids) => ({ individualResponses: ITEMS.filter((item) => ids.includes(item.id)).map(({ id, fields }) => ({ content: { id, fields } })) }),

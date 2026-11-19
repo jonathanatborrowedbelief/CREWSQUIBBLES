@@ -11,9 +11,9 @@ Paste into a fresh session: "Read ~/Workspace/OpenMausBot/rebrand/RESUME-PROMPT-
 - Jon's calls since the plan: installer marker accepts both old and new text (done); bots' browser download URL (`server/browser-engine-release.ts:49`) stays for phase 4.
 
 ## Next, in order
-1. Check the full-suite result (above). Fix new failures (most likely e2e tests still expecting old text).
-2. Fix the false phone claim: `phone.pair.rowLine`, `phone.code.installAndScan` and the other "Install {app} on your phone from the App Store" values in `src/locales/en.json` (+15 packs) → "the phone app"; update the src tests that assert them; `node scripts/generate-locale.mjs --record-hashes`.
-3. Review the 221 census lines; anything that isn't deliberate gets swapped.
+1. DONE: full suite checked, `rebrand/test-run-f241c86.md`. 2 e2e brand leftovers fixed (uncommitted); the rest is upstream/flaky/enterprise-deleted.
+2. DONE (uncommitted, `rebrand/phone-wording-result.md`, CLEAN; locale --check valid). Server text "Use CREW on your phone?" left on purpose (true: CREW is used from the phone). Was: fix the false phone claim: `phone.pair.rowLine`, `phone.code.installAndScan` and the other "Install {app} on your phone from the App Store" values in `src/locales/en.json` (+15 packs) → "the phone app"; update the src tests that assert them; `node scripts/generate-locale.mjs --record-hashes`.
+3. DONE: `rebrand/census-review-2026-11-18.md`. All 221 deliberate or owned by phase 3/4. Open: Jon picks rename repo → CREW vs allowlist our fork URL (group E). Add `electron/managed-composio.mjs` workers.dev broker to phase 4.
 4. Phase 4 first part (before anyone gets a built app): updater feed → our fork + its 4 CI gates, PostHog default-off switch (code kept), announcements / model list / update check / `@devs` off, upstream Cloud/promos hidden (incl. `CloudCancelPlan.tsx` founder booking link). Reminder of what each needs: `rebrand/hidden-upstream-features.md`.
 5. Phase 3: productName CREW (keep the settings folder and bundle id), permission prompts, About + Licenses (Apache NOTICE), `crew` command alias, starter bot "MausBot" → Squibbles one-time rename (`server/default-bot.ts:83` lookup must also match the old name), `Documents › MausBot` folder.
 6. Phases 5-6 per the plan; final check by a separate verifier agent.

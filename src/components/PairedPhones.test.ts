@@ -45,8 +45,8 @@ describe("paired phones", () => {
     expect(markup).toContain("This phone has an older version of the app. Update the app, then open it once on the same Wi-Fi as this computer. If that doesn&#x27;t reconnect it, pair it again here.");
     expect(markup).toMatch(/<button type="button"[^>]*>Pair again<\/button>/);
     expect(renderToStaticMarkup(rowFor(phone(), retired)), "no way to pair from here: no button").not.toContain("Pair again");
-    expect(renderToStaticMarkup(rowFor(phone({ e2eAt: NOW }), retired, () => {})), "a phone on the encrypted connection").not.toContain("older MausBot app");
-    expect(renderToStaticMarkup(rowFor(phone(), c, () => {})), "the link not ended").not.toContain("older MausBot app");
+    expect(renderToStaticMarkup(rowFor(phone({ e2eAt: NOW }), retired, () => {})), "a phone on the encrypted connection").not.toContain("Older phone app");
+    expect(renderToStaticMarkup(rowFor(phone(), c, () => {})), "the link not ended").not.toContain("Older phone app");
   });
 
   it("lists connected phones first, then the most recently seen", () => {

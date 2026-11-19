@@ -41,7 +41,7 @@ describe("Phone & devices", () => {
   it("with nothing paired and no way in on, shows one task: pair, with where to get the app in plain words and the ways in folded into one row", () => {
     const html = page(true);
     // One untitled card: the row says "Your phone" and what to do, and the code (with "scan this code") is only in the dialog.
-    expect(html).toMatch(/Your phone[\s\S]*?Install CREW on your phone from the App Store or Google Play, then pair it here\./);
+    expect(html).toMatch(/Your phone[\s\S]*?Install the phone app from the App Store or Google Play, then pair it here\./);
     expect(html).not.toContain("<h3");
     expect(html).not.toContain("this code");
     expect(html, "no store or download link in the desktop app").not.toMatch(/data-phone-app|apps\.apple\.com|\.apk|<a [^>]*App Store/);
