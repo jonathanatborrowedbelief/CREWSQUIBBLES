@@ -3,7 +3,7 @@
 Paste this into a fresh session: "Read ~/Workspace/OpenMausBot/rebrand/RESUME-PROMPT-2026-11-17-crew-mascots.md and continue."
 
 ## Where we are
-- Product: **Crew by AI Systems by Jon**, a rebrand of the OpenMausBot fork. Repo `~/Workspace/OpenMausBot`, branch `rebrand`, pushed to `jonathanatborrowedbelief/OpenMausBot` (commit f47e9b2). The fork is public.
+- Product: **Crew by AI Systems by Jon**, a rebrand of the OpenMausBot fork. Repo `~/Workspace/OpenMausBot`, branch `rebrand`, pushed to `jonathanatborrowedbelief/CREWSQUIBBLES` (commit f47e9b2). The fork is public.
 - Done: `enterprise/` removed. Name, gold accent and `$_` logo are set in `server/brand.ts` + `src/lib/brand.ts`, and the welcome screen shows "Meet Crew". Official v0.1.169 is installed in-house at /Applications/OpenMausBot.app.
 - Not committed: `rebrand/TODO.md`, `rebrand/mascots/` (12 test images + 3 sheets), this file. Commit only when Jon says.
 - Preview server may still be running (port 18797, pid in the scratchpad `omb-preview/pid`). To restart it, rebuild with `pnpm exec vite build`, then run `server/dev-server.ts` with an isolated HOME/OMB_DATA_DIR plus `OMB_STATIC_DIR=$PWD/dist`.

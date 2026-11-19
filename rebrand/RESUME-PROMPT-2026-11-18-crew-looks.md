@@ -3,7 +3,7 @@
 Paste into a fresh session: "Read ~/Workspace/OpenMausBot/rebrand/RESUME-PROMPT-2026-11-18-crew-looks.md and continue."
 
 ## Where we are
-- Product: **CREW** (all caps), "by AI Systems by Jon". Rebrand of the OpenMausBot fork. Repo `~/Workspace/OpenMausBot`, branch `rebrand`, fork `jonathanatborrowedbelief/OpenMausBot` (public). **Everything is pushed** (f47e9b2 name, 81d4d28 mascot, 0803306 caps, crew-looks commit).
+- Product: **CREW** (all caps), "by AI Systems by Jon". Rebrand of the OpenMausBot fork. Repo `~/Workspace/OpenMausBot`, branch `rebrand`, fork `jonathanatborrowedbelief/CREWSQUIBBLES` (public). **Everything is pushed** (f47e9b2 name, 81d4d28 mascot, 0803306 caps, crew-looks commit).
 - Mascot: **Squibbles** (sage green, headset) = Director = logo + app icon + default bot. Crew: Builder (coral, hard hat + wrench), QA (cream, clipboard), Coder (navy, laptop). Art in `rebrand/mascots/final/`, rules in `rebrand/bot-format.md`.
 - **Crew looks (11-18):** a "Crew" row at the top of the bot look picker. A pick = cursor body + crew color: chrome = Squibbles, coral = Builder, yellow = QA, blue = Coder. Pictures in `src/assets/mausbot-steel/cursor[-color]-<px>.webp`; lookup in `src/lib/steel-body.ts` (`CREW_LOOKS`). Chosen so the phone-protocol body enum and the iOS app stay untouched. Side effect: picking cursor + coral by hand also gives Builder. Separate crew bodies = protocol + iOS change, ~2 h, only if Jon asks.
 - Reset in the picker returns to Squibbles (was the old green cursor).

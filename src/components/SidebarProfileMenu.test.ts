@@ -197,7 +197,7 @@ describe("updateNoteworthy", () => {
 describe("outward links", () => {
   it("sends Help Center to the docs the website also links to", () => {
     expect(HELP_CENTER_URL).toBe(DOCS_URL);
-    expect(DOCS_URL).toBe("https://github.com/jonathanatborrowedbelief/OpenMausBot/tree/rebrand/docs");
+    expect(DOCS_URL).toBe("https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/tree/rebrand/docs");
   });
 
   it("sends Send Feedback to the Discord community", () => {

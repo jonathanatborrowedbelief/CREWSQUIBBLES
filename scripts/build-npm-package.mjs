@@ -60,8 +60,8 @@ writeFileSync(
       },
       files: ["cli.js", "dist-server", "dist", "skills", "enterprise", "LICENSE", "README.md"],
       engines: { node: ">=24" },
-      repository: { type: "git", url: "https://github.com/jonathanatborrowedbelief/OpenMausBot.git" },
-      homepage: "https://github.com/jonathanatborrowedbelief/OpenMausBot#readme",
+      repository: { type: "git", url: "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES.git" },
+      homepage: "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES#readme",
       keywords: ["openmausbot", "agents", "self-hosted", "server"],
     },
     null,
@@ -158,9 +158,9 @@ openmausbot run "Room Lead" "Rehearse the launch of https://example.com" --expor
 openmausbot help run       # every verb: doctor, run, wait, send, export, events, team, engine, connect, mcp
 \`\`\`
 
-[Setup guide](https://github.com/jonathanatborrowedbelief/OpenMausBot/blob/rebrand/docs/cli-onboarding.md)
-· [Scripts and CI](https://github.com/jonathanatborrowedbelief/OpenMausBot/blob/rebrand/docs/headless-cli.md)
-· [Hosting guide](https://github.com/jonathanatborrowedbelief/OpenMausBot/blob/rebrand/docs/self-hosting.md)
+[Setup guide](https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/blob/rebrand/docs/cli-onboarding.md)
+· [Scripts and CI](https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/blob/rebrand/docs/headless-cli.md)
+· [Hosting guide](https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/blob/rebrand/docs/self-hosting.md)
 `,
 );
 console.log(`npm package assembled at ${out} (openmausbot@${app.version})`);

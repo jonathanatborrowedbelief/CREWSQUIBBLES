@@ -55,7 +55,7 @@ j. Nothing was run: no Docker build, no VPS, no two-device test.
 ### 1. VPS + our Docker build + own domain + pairing codes (durable)
 ```
 # VPS: Ubuntu 24.04, >=4 GB RAM (+swap), DNS A crew.<domain> -> VPS, ports 80/443
-git clone https://github.com/jonathanatborrowedbelief/OpenMausBot && cd OpenMausBot && git checkout rebrand
+git clone https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES && cd OpenMausBot && git checkout rebrand
 cd deploy && cp .env.example .env   # DOMAIN=crew.<domain>; ENGINES="@anthropic-ai/claude-code @openai/codex"
 docker compose up -d --build
 docker compose exec omb claude      # sign engines in (or Settings -> Engines)

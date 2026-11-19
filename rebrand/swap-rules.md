@@ -13,7 +13,7 @@ Goal: no MausBot / OpenMausBot anywhere a person or a bot reads it. Check your a
 | The starter bot's NAME: `DEFAULT_BOT_NAME`, `?? "MausBot"` fallbacks for a bot name, bot-name placeholders, the persona "You are MausBot" | Squibbles |
 | The phone app: "the MausBot app", "MausBot phone app", "Update MausBot on your phone" | "the phone app", "Update the app on your phone". Never claim a CREW phone app or a CREW App Store listing exists. |
 | Upstream founders by name (Milind, Omkar) in user text | drop the names, neutral wording ("Sent as bug report {report}.") |
-| UI doc links `https://github.com/milind-soni/OpenMausBot/blob/main/docs/…` and `APP_REPOSITORY` | `https://github.com/jonathanatborrowedbelief/OpenMausBot/blob/rebrand/docs/…` / `https://github.com/jonathanatborrowedbelief/OpenMausBot` |
+| UI doc links `https://github.com/milind-soni/OpenMausBot/blob/main/docs/…` and `APP_REPOSITORY` | `https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/blob/rebrand/docs/…` / `https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES` |
 
 Keep grammar right after a swap ("a CREW server", not "an CREW server"). CREW is always all caps.
 

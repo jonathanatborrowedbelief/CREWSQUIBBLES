@@ -1,5 +1,5 @@
 export const APP_NAME = "CREW";
-export const APP_REPOSITORY = "https://github.com/jonathanatborrowedbelief/OpenMausBot";
+export const APP_REPOSITORY = "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES";
 export const DOCS_URL = `${APP_REPOSITORY}/tree/rebrand/docs`;
 export const HELP_CENTER_URL = DOCS_URL;
 export const APPROVAL_LEVELS_URL = `${APP_REPOSITORY}/blob/rebrand/docs/approval-levels.md`;

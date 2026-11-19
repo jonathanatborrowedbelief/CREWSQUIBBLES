@@ -19,7 +19,7 @@ export const PREVIEW_STREAM_LIBRARIES_COMMAND = "sudo openmausbot browser instal
 /** What a container's operator sets to run its browser without Chrome's own sandbox. */
 export const PREVIEW_STREAM_SANDBOX_OFF = "OMB_BROWSER_SANDBOX=0";
 export const PREVIEW_STREAM_SANDBOX_STEPS_URL =
-  "https://github.com/jonathanatborrowedbelief/OpenMausBot/blob/rebrand/docs/deploy-vps.md#ubuntu-2404-browser-sandbox";
+  "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/blob/rebrand/docs/deploy-vps.md#ubuntu-2404-browser-sandbox";
 
 export type PreviewViewportSetting =
   | { readonly mode: "fill" }

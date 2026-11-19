@@ -3,7 +3,7 @@
 Paste into a fresh session: "Read ~/Workspace/OpenMausBot/rebrand/RESUME-PROMPT-2026-11-18-crew-next.md and continue."
 
 ## Where we are
-- Product name: **CREW** (all caps, Jon 11-18), tagline "by AI Systems by Jon". Rebrand of the OpenMausBot fork. Repo `~/Workspace/OpenMausBot`, branch `rebrand`. Fork `jonathanatborrowedbelief/OpenMausBot` is public.
+- Product name: **CREW** (all caps, Jon 11-18), tagline "by AI Systems by Jon". Rebrand of the OpenMausBot fork. Repo `~/Workspace/OpenMausBot`, branch `rebrand`. Fork `jonathanatborrowedbelief/CREWSQUIBBLES` is public.
 - Commits on `rebrand`: f47e9b2 (name preview, pushed), 81d4d28 (mascot swap), plus the CREW-caps commit after it. **The last two are NOT pushed.** Push only when Jon says "push".
 - Mascot is done. **Squibbles** (sage green, headset) = Director = the logo. Crew: Builder (coral, hard hat + wrench), QA (cream, clipboard), Coder (navy, laptop with a blank lid). White outline on every bot. Final art is in `rebrand/mascots/final/`. The rules for new bots are in `rebrand/bot-format.md`.
 - Squibbles is live in: app icons (`build/icon*`, `electron/resources/app-icon.png`), web icons (`public/*`), welcome logo + favicon (`CREW_LOGO`/`CREW_FAVICON` in `server/brand.ts`), and the default bot avatar (`src/assets/mausbot-steel/cursor-*.webp`). Onboarding shows him as "your Chief of Staff".
