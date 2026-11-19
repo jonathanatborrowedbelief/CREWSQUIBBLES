@@ -2,10 +2,17 @@
 // saying what it does. A window that can't apply one (a browser has no desktop bridge) refuses it.
 import { PLACE_SWATCHES, TALK_KEYS } from "../../shared/app-settings.ts";
 import { personOnly, type SettingEntry, type WindowPref } from "./registry.ts";
+import { HIDE_UPSTREAM } from "../../electron/upstream-hidden.mjs";
 
 const turn = (on: boolean, yes: string, no: string) => (on ? yes : no);
 
-export function windowEntries(windowPref: WindowPref): SettingEntry[] {
+const UPSTREAM_ONLY = new Set(["account.productEmails", "remote.relay"]);
+
+export function windowEntries(windowPref: WindowPref, hideUpstream = HIDE_UPSTREAM): SettingEntry[] {
+  return allWindowEntries(windowPref).filter((entry) => !(hideUpstream && UPSTREAM_ONLY.has(entry.id)));
+}
+
+function allWindowEntries(windowPref: WindowPref): SettingEntry[] {
   const flag = (id: Parameters<WindowPref>[0], label: string, help: string, where: Parameters<WindowPref>[3], synonyms: string[], yes: string, no: string) =>
     windowPref(id, label, help, where, synonyms, "true or false", { says: (on: boolean) => turn(on, yes, no) });
   /** A way in to this computer: a bot may turn it on, but turning it off can cut off the device the person is using now. */
@@ -40,8 +47,8 @@ export function windowEntries(windowPref: WindowPref): SettingEntry[] {
       "Show a system notification when a bot finishes or needs you", "Stop system notifications from bots"),
     flag("general.notificationFeed", "Notification feed", "Keep a feed of what bots did in the notifications panel.", "notifications", ["feed", "notification feed", "inbox"],
       "Keep a feed of bot updates", "Turn off the feed of bot updates"),
-    flag("general.analytics", "Usage analytics", "Send anonymous usage data to CREW (PostHog) to improve the app.", "analytics", ["analytics", "telemetry", "privacy", "tracking"],
-      "Send anonymous usage data from this app to CREW's analytics (PostHog), off this computer", "Stop sending usage analytics"),
+    flag("general.analytics", "Usage analytics", "CREW builds ship without an analytics key and send no usage data, so this switch does nothing there; only a build made with its own key sends anything.", "analytics", ["analytics", "telemetry", "privacy", "tracking"],
+      "Allow anonymous usage analytics (does nothing unless this build was made with an analytics key; CREW's own builds send nothing)", "Keep usage analytics off (CREW's own builds send nothing either way)"),
     flag("general.openAtLogin", "Open at login", "Start CREW when you log in to this computer (desktop app).", "startup", ["startup", "launch", "login", "open at login"],
       "Open CREW when you log in", "Don't open CREW at login"),
     windowPref("general.talkShortcut", "Talk shortcut", "A key held anywhere on this Mac to talk to CREW (desktop app).", "talk", ["talk", "voice", "dictation", "microphone", "hotkey"],

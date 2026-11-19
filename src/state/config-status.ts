@@ -60,6 +60,8 @@ export interface ConfigStatus {
   mcp?: { callTimeoutMinutes: number };
   /** Workspace defaults for new bots; absent effort = no level is sent. */
   newBots?: { effort?: EffortLevel };
+  /** `@devs` bug reports go somewhere (OMB_BUG_REPORT_URL is set). False: they are off, and @devs is not offered. Absent from older servers, which always had them. */
+  bugReports?: boolean;
   /** This Cloud is on the Starter plan, as the Admin last said; absent or false otherwise. */
   cloudStarter?: boolean;
   /** The most bots this Cloud's plan makes, its MausBot aside. Sent only by servers that capped Starter's bots; absent otherwise. */

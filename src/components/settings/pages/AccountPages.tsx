@@ -17,6 +17,7 @@ import { useAccountSummary, useYou } from "../account-summary";
 import { useSettingsShell } from "../settings-shell";
 import { SpentRow } from "../plan-parts";
 import { profileLabel } from "../../SidebarProfileMenu";
+import { accountSheetBridge, cloudAccountBridge, updatesConsentWindowBridge } from "@/lib/upstream-hidden";
 
 export function AccountPage() {
   const { ctx, place, go } = useSettingsShell();
@@ -25,12 +26,12 @@ export function AccountPage() {
   const summary = useAccountSummary();
   const computer = useSwitchToComputer();
   const [signingOut, setSigningOut] = useState(false);
-  const bridge = ctx.client ? undefined : window.ogb?.cloudAccount;
+  const bridge = ctx.client ? undefined : cloudAccountBridge();
   // A Cloud's page in the desktop window that isn't the app's home: the account lives on This computer until main
   // shares it (S2). The same `home` decides This app's rows, so the two never disagree.
   const elsewhere = ctx.desktop && !ctx.client && !ctx.here && !ctx.home && !bridge;
   const email = summary.email ?? (summary.plan ? profile?.email ?? null : null);
-  const sheet = window.ogb?.accountSheet;
+  const sheet = accountSheetBridge();
   const computerBadge = <PlaceBadge place={{ kind: "computer", name: computer.name, color: null }} size={14} />;
   return <>
     <SettingsGroup block="you">
@@ -77,7 +78,7 @@ export function AccountPage() {
         <SettingsRows><InertRow title={t("settings.account.orgSignIn")} control={<button type="button" className="ui-button" tabIndex={-1}>{t("settings.account.signIn")}</button>} /></SettingsRows>
       </SettingsGroup>
     )}
-    {ctx.desktop && !ctx.client && window.ogb?.updatesConsent && (
+    {ctx.desktop && !ctx.client && updatesConsentWindowBridge() && (
       <SettingsGroup label={t("settings.account.emails", { app: productName() })} block="emails">
         <SettingsRows><UpdatesConsentRow /></SettingsRows>
       </SettingsGroup>

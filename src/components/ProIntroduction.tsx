@@ -8,13 +8,14 @@ import { t } from "@/lib/i18n";
 import { SettingRow, SettingsLinkRow } from "./SettingsPrimitives";
 import { UpgradeButton, type UpgradeUi } from "./CloudUsageMeter";
 import type { CloudUsage } from "../../electron/cloud-home.mjs";
+import { cloudAccountBridge } from "@/lib/upstream-hidden";
 
 export function proOfferAvailable(account: CloudAccountState | null): boolean {
   return buyOfferAllowed(cloudPlanView(account));
 }
 
 export function useCloudPlan(): { view: CloudPlanView; account: CloudAccountState | null } | null {
-  const bridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+  const bridge = window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
   const [account, setAccount] = useState<CloudAccountState | null>(null);
   useEffect(() => {
     if (!bridge) return;

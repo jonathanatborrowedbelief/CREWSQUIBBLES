@@ -29,6 +29,8 @@ const ph = vi.hoisted(() => ({
   }),
 }));
 vi.mock("posthog-js", () => ph.module());
+// CREW ships no PostHog key; these tests exercise the code path a build WITH a key takes (VITE_CREW_POSTHOG_KEY).
+vi.stubEnv("VITE_CREW_POSTHOG_KEY", "phc_crew_test_key_not_a_real_project");
 
 const storage = new Map<string, string>();
 const memoryStorage = {
@@ -287,6 +289,27 @@ describe("the daily usage snapshot", () => {
     expect(sent).toMatchObject({ cloud_plan: "pro", cloud_trial: true, cloud_home: true, cloud_computer_source: "included", platform: "browser", paired_devices: 2, phone_paired: true });
     expect(sent).not.toHaveProperty("phones_paired");
     expect((sent!.key_providers as string[])).not.toContain("boat");
+  });
+});
+
+describe("a build with no PostHog key (CREW's default)", () => {
+  afterEach(() => void vi.stubEnv("VITE_CREW_POSTHOG_KEY", "phc_crew_test_key_not_a_real_project"));
+
+  it("gathers nothing and captures nothing, whatever the stored switch says", async () => {
+    vi.stubEnv("VITE_CREW_POSTHOG_KEY", "");
+    const { snapshot } = await freshModules();
+    const sources = hostileSources();
+    const spies = [vi.spyOn(sources, "request"), vi.spyOn(sources, "connectedApps"), vi.spyOn(sources.companion!, "state"), vi.spyOn(sources.cloudAccount!, "state"), vi.spyOn(sources.cloudPlan!, "state")];
+    expect(await snapshot.sendDailySnapshot(hostileState(), sources, DAY)).toBe(false);
+    for (const spy of spies) expect(spy).not.toHaveBeenCalled();
+    expect(ph.captured).toEqual([]);
+    expect(storage.has("omb-analytics-snapshot-day")).toBe(false);
+  });
+
+  it("negative control: the same state and sources with a key send one snapshot", async () => {
+    const { snapshot } = await freshModules();
+    expect(await snapshot.sendDailySnapshot(hostileState(), hostileSources(), DAY)).toBe(true);
+    expect(snapshots()).toHaveLength(1);
   });
 });
 

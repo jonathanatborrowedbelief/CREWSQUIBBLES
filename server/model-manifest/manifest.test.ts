@@ -9,6 +9,7 @@ import {
   MANIFEST_ON_DEMAND_TTL_MS,
   MANIFEST_RETRY_MS,
   MANIFEST_TTL_MS,
+  MODEL_MANIFEST_URL,
   ModelManifestStore,
   modelManifestCachePath,
   withCliVersionGate,
@@ -98,6 +99,16 @@ describe("downloads", () => {
     expect(changed).toHaveBeenCalledTimes(1);
     const saved = JSON.parse(readFileSync(modelManifestCachePath(subject.dir), "utf8")) as { manifest: ModelManifestData };
     expect(saved.manifest.updatedAt).toBe("2026-11-09T00:00:00Z");
+  });
+
+  it("downloads from our fork's copy as CREW, never from upstream's repository", async () => {
+    const fetchMock = vi.fn(async (..._args: Parameters<typeof fetch>) => json(manifest("2026-11-09T00:00:00Z", ["remote-model"])));
+    const subject = store({ fetch: fetchMock as unknown as typeof fetch });
+    await subject.manifest.refresh();
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe(MODEL_MANIFEST_URL);
+    expect(MODEL_MANIFEST_URL).toBe("https://raw.githubusercontent.com/jonathanatborrowedbelief/CREWSQUIBBLES/rebrand/server/model-manifest/model-manifest.json");
+    expect((init!.headers as Record<string, string>)["user-agent"]).toBe("CREW");
   });
 
   it("rejects a stale download older than the current list", async () => {

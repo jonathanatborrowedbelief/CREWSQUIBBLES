@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { diagnoseRemoteAccess, remoteAccessDiagnosisText, type RemoteAccessFacts } from "./remote-access-diagnosis";
+import { setUpstreamHidden } from "./upstream-hidden";
 
 type Companion = NonNullable<RemoteAccessFacts["companion"]>;
 type Account = NonNullable<RemoteAccessFacts["account"]>;
@@ -186,3 +187,26 @@ describe("the remote access diagnosis", () => {
     }
   });
 });
+
+describe("with upstream's account service hidden (CREW)", () => {
+  afterEach(() => setUpstreamHidden(false));
+
+  it("lists only this computer and the phone's way in, never the account or the relay, in the steps, the headline and the copied text", () => {
+    const facts: RemoteAccessFacts = { account: { available: false, status: "signed-out", problem: "unconfigured" }, companion: companion({ routes: { wifi: route(true), relay: route(false), tailscale: route(false), https: route(false) }, e2e: undefined, relayToken: undefined }) };
+    expect(diagnoseRemoteAccess(facts).steps.map((step) => step.id), "control: the switch off").toEqual(["computer", "account", "relay", "route"]);
+    setUpstreamHidden(true);
+    const diagnosis = diagnoseRemoteAccess(facts);
+    expect(diagnosis.steps.map((step) => step.id)).toEqual(["computer", "route"]);
+    expect(diagnosis.headline).toBe("Your phone can reach this computer on the same Wi-Fi.");
+    const text = remoteAccessDiagnosisText(diagnosis);
+    expect(text).not.toMatch(/account|relay|Relay/);
+  });
+
+  it("a failing relay no longer fails the check, since Anywhere is not offered", () => {
+    const broken: RemoteAccessFacts = { account: { available: false, status: "signed-out", problem: "unreachable" }, companion: companion({ routes: { wifi: route(true), relay: route(true), tailscale: route(false), https: route(false) }, e2e: { enabled: true, relay: "off", node: null, relayProblem: "unreachable", descriptor: null } }) };
+    expect(diagnoseRemoteAccess(broken).failed, "control: the switch off").toBe(true);
+    setUpstreamHidden(true);
+    expect(diagnoseRemoteAccess(broken).failed).toBe(false);
+  });
+});
+

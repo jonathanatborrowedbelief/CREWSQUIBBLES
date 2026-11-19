@@ -12,12 +12,13 @@ import { t } from "@/lib/i18n";
 import { plainSignIn } from "@/lib/onboarding";
 import { useStore, type Bot } from "@/state/store";
 import { CARD, CARD_IDLE, CardIcon, Footer, PRIMARY, QUIET, SECONDARY, StepHeading } from "./parts";
+import { cloudPlanBridge } from "@/lib/upstream-hidden";
 
 /** Connecting an AI: an AI that already works when the step opens (one signed in here, or the plan's credit) is used as
  * it is and the step finishes itself; otherwise one recommended sign-in, every other way folded under it. */
 export function WelcomeEngine({ name, headingRef, onFinish }: { name: string; headingRef: Ref<HTMLHeadingElement>; onFinish: () => void }) {
   const engines = useCloudEngineChoices();
-  const plan = useCloudPlanSnapshot(window.ogb?.cloudPlan);
+  const plan = useCloudPlanSnapshot(cloudPlanBridge());
   const own = engines.instances.some((instance) => !instance.trialCredit && engineReady(instance));
   const credit = own ? null : welcomeCredit(engines.instances, plan);
   const readyOnOpen = useRef(own || credit?.state === "active");
@@ -65,7 +66,7 @@ export function WelcomeEngine({ name, headingRef, onFinish }: { name: string; he
  * Team Cloud, the desktop app shares folders through Files. */
 export function WelcomeFiles({ name, headingRef, onFinish }: { name: string; headingRef: Ref<HTMLHeadingElement>; onFinish: () => void }) {
   const { state, dispatch } = useStore();
-  const lent = Boolean(window.ogb?.cloudPlan) && !state.config?.team;
+  const lent = Boolean(cloudPlanBridge()) && !state.config?.team;
   const card = (id: string, icon: typeof Plug, title: string, body: string, action?: { label: string; run: () => void }) =>
     <div data-welcome-files={id} className={cn(CARD, CARD_IDLE)}>
       <CardIcon icon={icon} />

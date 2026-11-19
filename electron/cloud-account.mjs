@@ -7,14 +7,15 @@ import nativeText from "./native-text.cjs";
 
 const { englishText } = nativeText;
 
-export const CLOUD_ORIGIN = "https://cloud.openmausbot.com";
-/** The staging Admin (Dodo test mode, real test Clouds): a fixed address, on only with OMB_CLOUD_STAGING=1. */
-export const STAGING_CLOUD_ORIGIN = "https://omb-cloud-staging.fly.dev";
+/** Empty = CREW Cloud is not set up in this build: no request, sign-in or browser page is ever started. Our own Cloud's origin goes here. */
+export const CLOUD_ORIGIN = "";
+/** The staging Admin (Dodo test mode, real test Clouds): a fixed address, on only with OMB_CLOUD_STAGING=1. Empty: CREW has none, and the variable does nothing. */
+export const STAGING_CLOUD_ORIGIN = "";
 /** Which Admin this app signs in to, and the files that depend on it (the sign-in, saved servers with the Cloud's
  * entry, Files' state, the Cloud's chosen name): staging never reads or writes production's. */
-export function cloudTarget(env = process.env) {
-  return env?.OMB_CLOUD_STAGING === "1"
-    ? { origin: STAGING_CLOUD_ORIGIN, staging: true, file: "cloud-account-staging.bin", saved: "cloud-accounts-staging.bin", places: "account-places-staging.json", environments: "environments-staging.json", sync: "cloud-sync-staging", look: "cloud-home-look-staging.json" }
+export function cloudTarget(env = process.env, stagingOrigin = STAGING_CLOUD_ORIGIN) {
+  return env?.OMB_CLOUD_STAGING === "1" && stagingOrigin
+    ? { origin: stagingOrigin, staging: true, file: "cloud-account-staging.bin", saved: "cloud-accounts-staging.bin", places: "account-places-staging.json", environments: "environments-staging.json", sync: "cloud-sync-staging", look: "cloud-home-look-staging.json" }
     : { origin: CLOUD_ORIGIN, staging: false, file: "cloud-account.bin", saved: "cloud-accounts.bin", places: "account-places.json", environments: "environments.json", sync: "cloud-sync", look: "cloud-home-look.json" };
 }
 const TOKEN = /^omc_[A-Za-z0-9_-]{43}$/;
@@ -70,9 +71,10 @@ export function checkoutDestination(value, { fixture = false, staging = false } 
   return url.href;
 }
 // Never accept an address from the renderer.
-export function cloudOrigin(value = CLOUD_ORIGIN, fixture = false) {
+export function cloudOrigin(value = CLOUD_ORIGIN, fixture = false, stagingOrigin = STAGING_CLOUD_ORIGIN) {
+  if (value === "") return value;
   const url = new URL(value);
-  if (value !== url.origin || (![CLOUD_ORIGIN, STAGING_CLOUD_ORIGIN].includes(value) && !(fixture && url.protocol === "http:" && ["127.0.0.1", "[::1]"].includes(url.hostname)))) {
+  if (value !== url.origin || (![CLOUD_ORIGIN, stagingOrigin].includes(value) && !(fixture && url.protocol === "http:" && ["127.0.0.1", "[::1]"].includes(url.hostname)))) {
     throw new Error("Invalid CREW Cloud address.");
   }
   return value;
@@ -97,10 +99,13 @@ function addOffer(result) {
 }
 
 export function createCloudAccountClient({ store, openBrowser, platform, deviceName, appVersion,
-  origin = CLOUD_ORIGIN, fixture = false, fetch: fetcher = globalThis.fetch, now = Date.now, onState = () => {},
+  origin = CLOUD_ORIGIN, fixture = false, stagingOrigin = STAGING_CLOUD_ORIGIN, fetch: fetcher = globalThis.fetch, now = Date.now, onState = () => {},
   setTimer = setTimeout, clearTimer = clearTimeout, warn = message => console.warn(message), awaitingWake = () => false, t = englishText.t }) {
-  origin = cloudOrigin(origin, fixture);
-  const staging = origin === STAGING_CLOUD_ORIGIN;
+  origin = cloudOrigin(origin, fixture, stagingOrigin);
+  const staging = stagingOrigin !== "" && origin === stagingOrigin;
+  /** No origin: nothing here ever reaches a network or opens a browser, and a saved sign-in is left alone. */
+  const configured = origin !== "";
+  const notSetUp = () => Object.assign(new Error("CREW Cloud is not set up in this build."), { unconfigured: true });
   let grant = null, issued = null, cleanup = null, pending = null, cleanupNeeded = false;
   let value = { status: "signed-out", message: "restoring" }, generation = 0, timer = null, closed = false, clearing = null, refreshing = null;
   let verifiedUntil = 0, restoring = false, controller = new AbortController(), failures = 0;
@@ -153,6 +158,7 @@ export function createCloudAccountClient({ store, openBrowser, platform, deviceN
   const current = stamp => !closed && !quiet && generation === stamp;
   const versionHeader = text(appVersion, 40) && /^[0-9A-Za-z][0-9A-Za-z.+-]{0,39}$/.test(appVersion) ? { "x-openmausbot-version": appVersion } : {};
   async function request(route, { method = "GET", body, token, signal = controller.signal, path = `/api/cloud/desktop/${route}`, timeoutMs = 20_000 } = {}) {
+    if (!configured) throw notSetUp();
     const response = await fetcher(`${origin}${path}`, {
       method, redirect: "error", credentials: "omit", cache: "no-store",
       headers: { accept: "application/json", ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}`, ...versionHeader } : {}) },
@@ -471,6 +477,7 @@ export function createCloudAccountClient({ store, openBrowser, platform, deviceN
     return state();
   }
   async function start() {
+    if (!configured) { restoring = false; return publish({ status: "signed-out" }); }
     const stamp = generation;
     restoring = true; verifiedUntil = 0;
     let saved, restored = null, failed = false, unreadable = false;
@@ -511,7 +518,7 @@ export function createCloudAccountClient({ store, openBrowser, platform, deviceN
     },
     cancel: () => { if (!pending && value.status !== "connecting") return Promise.resolve(state()); opened = null; return signOut(); },
     refresh, signOut,
-    async openDashboard() { await openBrowser(`${origin}/cloud`); return state(); },
+    async openDashboard() { if (!configured) throw notSetUp(); await openBrowser(`${origin}/cloud`); return state(); },
     async upgradePreview(plan, source) {
       if (!UPGRADE_TIERS.includes(plan) || !UPGRADE_SOURCES.includes(source)) throw new Error("Invalid Cloud upgrade.");
       const signedIn = grant;

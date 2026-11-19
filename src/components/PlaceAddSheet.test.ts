@@ -4,10 +4,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { setLocale } from "@/lib/i18n";
 import { suggestedLocalName } from "@/lib/places";
+import { setUpstreamHidden } from "@/lib/upstream-hidden";
 
 vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 vi.mock("./cloud-buy/CloudMascotScene", () => ({ CloudMascotScene: () => null }));
-const { NewLocalFromMenu, RailSheet } = await import("./PlaceAddSheet");
+const { NewLocalFromMenu, PlaceAddSheet, RailSheet } = await import("./PlaceAddSheet");
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let host: HTMLDivElement, root: Root | null = null, ask: (() => void) | null = null;
@@ -54,3 +55,17 @@ it("a parent re-render with a new onClose keeps focus inside the sheet instead o
   await act(async () => { root!.render(createElement("div")); });
   expect(document.activeElement, "closing still returns focus to the opener").toBe(opener);
 });
+
+it("the ＋ sheet offers no Cloud to buy, no organization and no CREW account while upstream's Cloud is hidden, and still a workspace here and a server link", async () => {
+  const choices = { local: true, cloud: true, link: true, organization: true, account: true, address: false } as never;
+  const kinds = () => [...document.querySelectorAll("[data-place-add-choice]")].map((button) => button.getAttribute("data-place-add-choice"));
+  root = createRoot(host);
+  await act(async () => { root!.render(createElement(PlaceAddSheet, { choices, onClose: () => {}, onAccount: () => {} })); });
+  expect(kinds(), "control: the switch off").toEqual(["local", "organization", "cloud", "server", "account"]);
+  setUpstreamHidden(true);
+  try {
+    await act(async () => { root!.render(createElement(PlaceAddSheet, { choices, onClose: () => {}, onAccount: () => {}, places: [] })); });
+    expect(kinds()).toEqual(["local", "server"]);
+  } finally { setUpstreamHidden(false); }
+});
+

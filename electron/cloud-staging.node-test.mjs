@@ -5,24 +5,31 @@ import { CLOUD_ORIGIN, STAGING_CLOUD_ORIGIN, checkoutDestination, cloudOrigin, c
 
 const accessToken = `omc_${"S".repeat(43)}`;
 
-test("OMB_CLOUD_STAGING=1, and only that, points the app at the fixed staging Admin with its own token file", () => {
-  assert.deepEqual(cloudTarget({}), { origin: CLOUD_ORIGIN, staging: false, file: "cloud-account.bin", saved: "cloud-accounts.bin", places: "account-places.json", environments: "environments.json", sync: "cloud-sync", look: "cloud-home-look.json" });
-  assert.deepEqual(cloudTarget({ OMB_CLOUD_STAGING: "1" }), { origin: "https://omb-cloud-staging.fly.dev", staging: true, file: "cloud-account-staging.bin", saved: "cloud-accounts-staging.bin", places: "account-places-staging.json",
+// CREW has no staging Admin of its own (upstream's is not ours to call), so these tests use a fixture one.
+const STAGING = "https://staging.example.test";
+
+test("OMB_CLOUD_STAGING=1, and only that, points the app at the fixed staging Admin with its own token file; with no staging Admin of ours it does nothing", () => {
+  assert.deepEqual(cloudTarget({}, STAGING), { origin: CLOUD_ORIGIN, staging: false, file: "cloud-account.bin", saved: "cloud-accounts.bin", places: "account-places.json", environments: "environments.json", sync: "cloud-sync", look: "cloud-home-look.json" });
+  assert.deepEqual(cloudTarget({ OMB_CLOUD_STAGING: "1" }, STAGING), { origin: STAGING, staging: true, file: "cloud-account-staging.bin", saved: "cloud-accounts-staging.bin", places: "account-places-staging.json",
     environments: "environments-staging.json", sync: "cloud-sync-staging", look: "cloud-home-look-staging.json" });
-  const production = Object.values(cloudTarget({})), staging = Object.values(cloudTarget({ OMB_CLOUD_STAGING: "1" }));
+  const production = Object.values(cloudTarget({}, STAGING)), staging = Object.values(cloudTarget({ OMB_CLOUD_STAGING: "1" }, STAGING));
   assert.ok(staging.filter(value => typeof value === "string").every(name => !production.includes(name)), "no file or address shared with production");
-  assert.equal(STAGING_CLOUD_ORIGIN, "https://omb-cloud-staging.fly.dev");
-  for (const value of ["0", "true", "yes", " 1", "1 ", "01", "2", "", "https://evil.example.test", "https://omb-cloud-staging.fly.dev"]) {
-    assert.deepEqual(cloudTarget({ OMB_CLOUD_STAGING: value }), cloudTarget({}), JSON.stringify(value));
+  for (const value of ["0", "true", "yes", " 1", "1 ", "01", "2", "", "https://evil.example.test", STAGING]) {
+    assert.deepEqual(cloudTarget({ OMB_CLOUD_STAGING: value }, STAGING), cloudTarget({}, STAGING), JSON.stringify(value));
   }
-  assert.deepEqual(cloudTarget({ OMB_CLOUD_ORIGIN: "https://evil.example.test", OMB_CLOUD_STAGING_URL: "https://evil.example.test" }), cloudTarget({}), "no address is ever read from the environment");
-  assert.deepEqual(cloudTarget(undefined).origin, process.env.OMB_CLOUD_STAGING === "1" ? STAGING_CLOUD_ORIGIN : CLOUD_ORIGIN);
+  assert.deepEqual(cloudTarget({ OMB_CLOUD_ORIGIN: "https://evil.example.test", OMB_CLOUD_STAGING_URL: "https://evil.example.test" }, STAGING), cloudTarget({}, STAGING), "no address is ever read from the environment");
+  // The shipped default: no staging origin, so the variable cannot point this app at upstream's.
+  assert.equal(STAGING_CLOUD_ORIGIN, "");
+  assert.deepEqual(cloudTarget({ OMB_CLOUD_STAGING: "1" }), cloudTarget({}));
+  assert.equal(cloudTarget({ OMB_CLOUD_STAGING: "1" }).origin, "");
+  assert.equal(cloudTarget({ OMB_CLOUD_STAGING: "1" }).staging, false);
 });
 
 test("the staging address is the one exact https origin; staging checkouts are only Dodo's test page", () => {
-  assert.equal(cloudOrigin(STAGING_CLOUD_ORIGIN), STAGING_CLOUD_ORIGIN);
-  for (const value of ["http://omb-cloud-staging.fly.dev", `${STAGING_CLOUD_ORIGIN}/`, `${STAGING_CLOUD_ORIGIN}:8443`, "https://omb-cloud-staging.fly.dev.evil.test", "https://evil.fly.dev"]) {
-    assert.throws(() => cloudOrigin(value), /Invalid CREW Cloud address/, value);
+  assert.equal(cloudOrigin(STAGING, false, STAGING), STAGING);
+  assert.throws(() => cloudOrigin(STAGING), /Invalid CREW Cloud address/, "unless a staging Admin is set, it is just another address");
+  for (const value of ["http://staging.example.test", `${STAGING}/`, `${STAGING}:8443`, "https://staging.example.test.evil.test", "https://evil.example.test"]) {
+    assert.throws(() => cloudOrigin(value, false, STAGING), /Invalid CREW Cloud address/, value);
   }
   const test = "https://test.checkout.dodopayments.com/session/cks_1", live = "https://checkout.dodopayments.com/session/cks_1";
   assert.equal(checkoutDestination(test, { staging: true }), test);
@@ -46,7 +53,7 @@ test("a staging client talks only to the staging Admin, says it is staging, and 
     if (path === "/api/cloud/desktop/checkout") return answer(200, { cloudContractVersion: 1, url: checkoutUrl });
     return answer(404, { error: "not_found" });
   };
-  const client = createCloudAccountClient({ origin: cloudTarget({ OMB_CLOUD_STAGING: "1" }).origin, fetch, deviceName: "Staging VM", platform: "linux", appVersion: "0.1.113",
+  const client = createCloudAccountClient({ origin: cloudTarget({ OMB_CLOUD_STAGING: "1" }, STAGING).origin, stagingOrigin: STAGING, fetch, deviceName: "Staging VM", platform: "linux", appVersion: "0.1.113",
     store: { read: async () => saved, write: async value => { saved = value; } }, openBrowser: async url => { browsers.push(url); }, onState: state => states.push(state),
     setTimer: () => 1, clearTimer: () => {} });
   try {
@@ -54,13 +61,13 @@ test("a staging client talks only to the staging Admin, says it is staging, and 
     assert.equal((await client.emailStart("tester@example.test")).outcome, "sent");
     const signedIn = await client.emailVerify("12345678");
     assert.equal(signedIn.outcome, "signed-in"); assert.equal(signedIn.state.staging, true);
-    assert.equal(saved.origin, STAGING_CLOUD_ORIGIN, "the stored sign-in names the staging Admin, so production never takes it");
+    assert.equal(saved.origin, STAGING, "the stored sign-in names the staging Admin, so production never takes it");
     assert.equal((await client.checkout("pro", "app_menu")).outcome, "opened");
     assert.deepEqual(browsers, ["https://test.checkout.dodopayments.com/session/cks_staging"]);
     checkoutUrl = "https://checkout.dodopayments.com/session/cks_live";
     assert.equal((await client.checkout("pro", "app_menu")).outcome, "failed");
     assert.equal(browsers.length, 1);
-    assert.ok(requests.every(url => url.startsWith(`${STAGING_CLOUD_ORIGIN}/`)), "every request went to staging");
+    assert.ok(requests.every(url => url.startsWith(`${STAGING}/`)), "every request went to staging");
     assert.ok(states.every(state => state.staging === true));
   } finally { client.close(); }
   const production = createCloudAccountClient({ fetch, deviceName: "Mac", platform: "darwin", store: { read: async () => null, write: async () => {} }, openBrowser: async () => {}, setTimer: () => 1, clearTimer: () => {} });

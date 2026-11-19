@@ -85,6 +85,12 @@ describe("buildApplicationMenu", () => {
     expect(onOrganizationSignIn).toHaveBeenCalledOnce();
   });
 
+  it("leaves the organisation sign-in out when main gives no way to start it (CREW hides upstream's Admin portal)", () => {
+    const submenu = build("darwin", {}).find(entry => entry.label === "Server").submenu;
+    expect(submenu.some(entry => entry.id === "organization-sign-in")).toBe(false);
+    expect(submenu.some(entry => entry.label === "Sign in with your organization…")).toBe(false);
+  });
+
   it("mirrors Add a Cloud… under the saved servers only when main offers it, and names My Cloud's line", () => {
     const servers = [{ id: "cloud", name: "My Cloud", origin: "https://omb-u-1.fly.dev" }];
     const without = build("darwin", { environments: servers }).find(entry => entry.label === "Server").submenu;

@@ -1,7 +1,9 @@
 const TOKEN = /^[0-9a-f]{64}$/;
 
-/** OpenMausBot's connected-apps service (cloudflare/composio-broker): the packaged desktop app and a Cloud home use it. */
-export const DEFAULT_MANAGED_COMPOSIO_BROKER_URL = "https://openmausbot-composio.milindsoni201.workers.dev";
+/** No default connected-apps service: CREW never calls upstream's (it was a workers.dev service of OpenMausBot's). Apps connect
+ * with the person's own Composio project key (Settings → API keys); a service of our own comes back by setting this URL
+ * (cloudflare/composio-broker has its source), or per run with OMB_COMPOSIO_BROKER_URL. */
+export const DEFAULT_MANAGED_COMPOSIO_BROKER_URL = "";
 
 /** OMB_COMPOSIO_BROKER=off: nothing reaches the managed service, whatever else is set. */
 export function managedComposioBrokerOff(environment = process.env) {
@@ -13,7 +15,7 @@ export function ownComposioKey(credentials, environment = process.env) {
   return Boolean((typeof saved === "string" && saved.trim()) || environment.COMPOSIO_API_KEY?.trim());
 }
 
-/** An explicit URL wins; otherwise the default, only for a shipped build, so development and tests never register. */
+/** An explicit URL wins; otherwise the default (none today), only for a shipped build, so development and tests never register. */
 export function managedComposioBrokerUrl(configured, shipped) {
   if (managedComposioBrokerOff()) return "";
   const explicit = typeof configured === "string" ? configured.trim() : "";
@@ -46,6 +48,9 @@ export function managedComposioChildEnvironment(brokerUrl, credentials, environm
   const next = { ...environment };
   delete next.OMB_COMPOSIO_BROKER_URL;
   delete next.OMB_COMPOSIO_BROKER_TOKEN;
+  // No service named (the default): tell the server it is switched off, so Connected apps asks for the person's own
+  // Composio key ("needs setup") instead of reporting a service outage.
+  if (!normalizeManagedComposioBrokerUrl(brokerUrl)) next.OMB_COMPOSIO_BROKER = "off";
   const access = managedComposioAccess(brokerUrl, credentials);
   if (access) {
     next.OMB_COMPOSIO_BROKER_URL = access.url;

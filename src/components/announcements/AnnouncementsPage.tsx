@@ -19,6 +19,7 @@ import { TOOL_PAGE_TITLE, ToolPage, ToolPageHeader } from "../ToolPageShell";
 import { TeamsPopup } from "../whats-new/TeamsPopup";
 import { WhatsNewPopup } from "../whats-new/WhatsNewPopup";
 import { useAnnouncements, type Announcements } from "./use-announcements";
+import { cloudAccountBridge } from "@/lib/upstream-hidden";
 
 const BUILT_IN_MARK: Record<HistoryMark, ComponentType<IconProps>> = {
   teams: UsersRound, cloud: Cloud, boat: Gift, modelgo: ModelgoMark, grok: GrokBotMark, "product-hunt": Rocket,
@@ -108,7 +109,7 @@ export function AnnouncementList({ items, locale = activeLocale(), onModal, canR
 /** The earlier What's new needs this desktop's Cloud account and the Admin's offer to say anything; null when it has nothing
  * for this account. */
 function useWhatsNewView(found: Announcements, listed: boolean): WhatsNewView | null {
-  const bridge = found.cloudBridge ? window.ogb?.cloudAccount : undefined;
+  const bridge = found.cloudBridge ? cloudAccountBridge() : undefined;
   const [offer, setOffer] = useState<CloudOffer | null | undefined>(undefined);
   useEffect(() => {
     if (!listed || !bridge?.offer) return;

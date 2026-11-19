@@ -96,11 +96,11 @@ describe("strict initialize fixture", () => {
   it("accepts OMB's own client, which sends the minimal handshake", async () => {
     fake = await startFakeHttpMcp({ strictInitialize: "http-400", tools: TOOLS });
     const client = new RemoteMcpClient({ type: "http", url: fake.url, headers: {} });
-    await client.initialize("OpenMausBot", AbortSignal.timeout(5_000));
+    await client.initialize("CREW", AbortSignal.timeout(5_000));
     const listed = await client.request("tools/list", {}, AbortSignal.timeout(5_000)) as { tools: Array<{ name: string }> };
     expect(listed.tools.map((tool) => tool.name)).toEqual(["report", "campaigns"]);
     await client.close();
-    expect(fake.initializes).toEqual([{ protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "OpenMausBot", version: "1" } }]);
+    expect(fake.initializes).toEqual([{ protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "CREW", version: "1" } }]);
   });
 
   it.each([
@@ -120,7 +120,7 @@ describe("strict initialize fixture", () => {
     expect((await ask(1, "initialize", handshake)).result.serverInfo.name).toBe("fake-http-mcp");
     child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" })}\n`);
     expect((await ask(2, "tools/list")).result.tools.map((tool: { name: string }) => tool.name)).toEqual(["report", "campaigns"]);
-    expect(fake.initializes).toEqual([{ protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "OpenMausBot tool proxy", version: "1" } }]);
+    expect(fake.initializes).toEqual([{ protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "CREW tool proxy", version: "1" } }]);
   });
 
   it.each([

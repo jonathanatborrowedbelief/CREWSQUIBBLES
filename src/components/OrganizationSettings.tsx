@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { ManagedDesktopState, ManagedMessageCode } from "../../electron/managed-desktop.mjs";
 import { activeLocale, t } from "@/lib/i18n";
+import { DEFAULT_ADMIN_ORIGIN } from "@/lib/onboarding";
 import type { LocaleKey } from "@/locales";
 import { Card, LearnMore, SETTINGS_INPUT, SettingRow, SettingsField, SettingsFoldRow, SettingsRows } from "./SettingsPrimitives";
 import { CompanyModels } from "./CompanyModels";
+import { organizationBridge } from "@/lib/upstream-hidden";
 
 const providerNames: Record<string, string> = { anthropic: "Anthropic", openai: "OpenAI", openrouter: "OpenRouter" };
-const DEFAULT_PORTAL_ORIGIN = "https://admin.openmausbot.com";
+/** The default portal the work sign-in button uses; empty leaves the button out. */
+const DEFAULT_PORTAL_ORIGIN = DEFAULT_ADMIN_ORIGIN;
 const STATUS_TEXT: Record<ManagedMessageCode, LocaleKey> = {
   clearFailed: "organization.status.clearFailed",
   disconnected: "organization.status.disconnected",
@@ -34,7 +37,7 @@ export function connectionMessage(connection: Pick<ManagedDesktopState, "message
 /** `simple`: Simple mode shows the section only once the person has an organization sign-in; signed out, it draws an
  * empty card, which hides the whole section (search still finds it, tagged Advanced). */
 export function OrganizationSettings({ simple = false }: { simple?: boolean } = {}) {
-  const bridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.organization;
+  const bridge = window.ogb?.remoteClient?.active ? undefined : organizationBridge();
   const [connection, setConnection] = useState<ManagedDesktopState | null>(null);
   const [address, setAddress] = useState("");
   const [busy, setBusy] = useState(false);
@@ -114,9 +117,9 @@ export function OrganizationSettings({ simple = false }: { simple?: boolean } = 
           {licenseExpired && <span role="alert" className="block text-ink">{t("organization.licenseExpired")}</span>}
           {error && <span role="alert" className="block text-danger">{error}</span>}
         </>}>
-        <button type="button" disabled={busy} className="ui-button" data-organization-sign-in="" onClick={() => void perform(() => bridge.begin({ portalOrigin: DEFAULT_PORTAL_ORIGIN }))}>
+        {DEFAULT_PORTAL_ORIGIN && <button type="button" disabled={busy} className="ui-button" data-organization-sign-in="" onClick={() => void perform(() => bridge.begin({ portalOrigin: DEFAULT_PORTAL_ORIGIN }))}>
           {busy ? t("organization.working") : t("organization.useWorkSignIn")}
-        </button>
+        </button>}
       </SettingRow>
       <SettingsFoldRow id="organization-address" title={t("organization.customTitle")} open={custom} onToggle={() => setCustom((open) => !open)}>
         <form className="flex flex-col gap-2 px-4 py-3" onSubmit={(event) => {

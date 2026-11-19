@@ -20,19 +20,20 @@ export type SendOutcome =
   /** The endpoint refused this report; sending it again would be refused again. */
   | { ok: false; retry: false; why: "refused"; detail: string };
 
-/** OMB_BUG_REPORT_URL (an https address, or http on this machine's loopback, for fixtures), else a Cloud home's own
- * Admin origin, else the staging or production Cloud. */
-export function bugReportEndpoint(env: NodeJS.ProcessEnv, cloudOrigin?: string | null): string {
+/** OMB_BUG_REPORT_URL (an https address, or http on this machine's loopback, for fixtures). Unset or unusable: "", which
+ * means @devs bug reports are OFF and nothing is sent anywhere. CREW has no report server yet; PRODUCTION_CLOUD_ORIGIN and
+ * STAGING_CLOUD_ORIGIN are upstream's and are no longer a default. `_cloudOrigin` (a Cloud home's own Admin) is ignored for
+ * the same reason; the parameter stays so callers keep compiling. */
+export function bugReportEndpoint(env: NodeJS.ProcessEnv, _cloudOrigin?: string | null): string {
   const explicit = env.OMB_BUG_REPORT_URL?.trim();
   if (explicit) {
     try {
       const url = new URL(explicit);
       const loopback = url.protocol === "http:" && ["127.0.0.1", "[::1]", "localhost"].includes(url.hostname);
       if ((url.protocol === "https:" || loopback) && !url.username && !url.password) return url.href;
-    } catch { /* not an address: the default below */ }
+    } catch { /* not an address: reports stay off */ }
   }
-  const origin = cloudOrigin ?? (env.OMB_CLOUD_STAGING === "1" ? STAGING_CLOUD_ORIGIN : PRODUCTION_CLOUD_ORIGIN);
-  return `${origin.replace(/\/+$/, "")}${BUG_REPORT_PATH}`;
+  return "";
 }
 
 async function boundedJson(response: Response): Promise<Record<string, unknown>> {
@@ -72,9 +73,12 @@ async function post(endpoint: string, payload: DevsReportPayload, fetcher: typeo
   }
 }
 
-export const devsReportSender = (endpoint: string, fetcher: typeof fetch = fetch) => (payload: DevsReportPayload) => sendDevsReport(endpoint, payload, fetcher);
+/** `off` is true for the empty endpoint: createDevsReports then never tags, queues, retries or asks about a report. */
+export const devsReportSender = (endpoint: string, fetcher: typeof fetch = fetch) =>
+  Object.assign((payload: DevsReportPayload) => sendDevsReport(endpoint, payload, fetcher), { off: endpoint === "" });
 
 export async function sendDevsReport(endpoint: string, payload: DevsReportPayload, fetcher: typeof fetch = fetch): Promise<SendOutcome> {
+  if (!endpoint) return { ok: false, retry: false, why: "refused", detail: "bug reports are turned off" };
   let answer = await post(endpoint, payload, fetcher);
   // An address the endpoint will not take must not cost the person their report.
   if (answer?.status === 400 && /contact/i.test(sentence(answer.body.error)) && (payload.contactEmail || payload.contact)) {
@@ -138,4 +142,5 @@ export async function askReportStatus(endpoint: string, question: ReportStatusQu
 }
 
 export const devsStatusAsker = (reportEndpoint: string, home: ReportStatusHome | null, fetcher: typeof fetch = fetch) =>
-  (question: ReportStatusQuestion) => askReportStatus(bugReportStatusEndpoint(reportEndpoint), question, home, fetcher);
+  (question: ReportStatusQuestion): Promise<ReportStatusAnswer | null> =>
+    reportEndpoint ? askReportStatus(bugReportStatusEndpoint(reportEndpoint), question, home, fetcher) : Promise.resolve(null);

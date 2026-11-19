@@ -1,5 +1,9 @@
 # Usage analytics
 
+**CREW builds send nothing.** Upstream's PostHog key was removed, so by default no analytics library loads, nothing is
+sent and the Settings switch is hidden. The rest of this page describes what the code can send once a build supplies its
+own PostHog key (`VITE_CREW_POSTHOG_KEY`).
+
 MausBot can send anonymous product analytics to PostHog (US cloud, `us.i.posthog.com`), so its maintainers can see
 which features people set up and use. This page lists every event and every property the app can send. Nothing else is
 sent.

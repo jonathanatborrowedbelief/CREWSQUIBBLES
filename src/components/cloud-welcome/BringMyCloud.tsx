@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import type { LocaleKey } from "@/locales";
 import type { TeamMoveView } from "../../../electron/team-move.mjs";
 import { CARD, CARD_IDLE, CardIcon, SECONDARY } from "./parts";
+import { cloudSendBridge } from "@/lib/upstream-hidden";
 
 const POLL_MS = 3_000;
 type Bringable = { id: string; name: string; stays?: "default" | "chief" | "last" };
@@ -13,7 +14,7 @@ type Bringable = { id: string; name: string; stays?: "default" | "chief" | "last
 const WHY_IT_STAYS: Record<NonNullable<Bringable["stays"]>, LocaleKey> = {
   default: "cloudWelcome.bring.mausBotStays", chief: "teamMove.blockedChief", last: "teamMove.blockedLast",
 };
-const bridge = () => (typeof window !== "undefined" && !window.ogb?.remoteClient?.active ? window.ogb?.cloudSendPage : undefined);
+const bridge = () => (typeof window !== "undefined" && !window.ogb?.remoteClient?.active ? cloudSendBridge() : undefined);
 
 /** On a team's own page in the desktop app: the person's bots on My Cloud, each moved here with one tap and main's own
  * confirm, which no page draws. Nothing shows for someone with none to bring. */

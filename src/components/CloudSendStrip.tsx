@@ -3,6 +3,7 @@ import type { CloudSendNotice, CloudSendPageBridge } from "../../electron/cloud-
 import { moveQuietUntil } from "@/lib/cloud-send";
 import { BotMoveLine, MoveChooser } from "./MoveToMyCloud";
 import { TeamMoveLine } from "./MoveToTeam";
+import { cloudSendBridge } from "@/lib/upstream-hidden";
 
 /** My Cloud's notice from main, kept fresh: undefined until main first answers, null when it can't. */
 export function useCloudSendNotice(bridge: CloudSendPageBridge | undefined) {
@@ -20,7 +21,7 @@ export function useCloudSendNotice(bridge: CloudSendPageBridge | undefined) {
 /** The corner cards that sell or ask for something wait (moveQuietUntil): null until main first answers, then whether
  * they wait now. The time after the move is kept once its line is closed, and the page looks again when it is over. */
 export function useMoveQuiet(now: () => number = Date.now): boolean | null {
-  const bridge = !window.ogb?.remoteClient?.active ? window.ogb?.cloudSendPage : undefined;
+  const bridge = !window.ogb?.remoteClient?.active ? cloudSendBridge() : undefined;
   const [notice] = useCloudSendNotice(bridge);
   const [after, setAfter] = useState(0);
   const [, setLooked] = useState(0);
@@ -39,7 +40,7 @@ export function useMoveQuiet(now: () => number = Date.now): boolean | null {
 /** In the desktop app, never in a browser: on My Cloud's page, a bot's move into a team. The one-time move to My Cloud is
  * never a strip over the page: it lives in the account area at the bottom of the sidebar (AccountMove). */
 export function CloudSendStrip({ cloudHome }: { cloudHome: boolean }) {
-  const bridge = !window.ogb?.remoteClient?.active ? window.ogb?.cloudSendPage : undefined;
+  const bridge = !window.ogb?.remoteClient?.active ? cloudSendBridge() : undefined;
   const [notice, setNotice] = useCloudSendNotice(bridge);
   const [notNow, setNotNow] = useState(false);
   if (!bridge || !notice) return null;

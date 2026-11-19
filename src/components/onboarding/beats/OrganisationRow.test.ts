@@ -5,6 +5,8 @@ import type { ManagedDesktopBridge, ManagedDesktopState } from "../../../../elec
 import { setLocale } from "@/lib/i18n";
 
 const fixture = vi.hoisted(() => ({ values: [] as unknown[], index: 0, effects: [] as EffectCallback[] }));
+// CREW has no Admin portal of its own yet (the default is empty); the default sign-in is tested against a fixture portal.
+vi.mock("@/lib/onboarding", async (original) => ({ ...await original<typeof import("@/lib/onboarding")>(), DEFAULT_ADMIN_ORIGIN: "https://admin.example.test" }));
 vi.mock("react", async (original) => ({
   ...(await original<typeof import("react")>()),
   useState: (initial: unknown) => {
@@ -68,7 +70,7 @@ async function mount(state: ManagedDesktopState = { status: "signed-out" }) {
 
 const connecting: ManagedDesktopState = {
   status: "connecting",
-  enrollment: { userCode: "ABCDE-FGHIJ", verificationUri: "https://admin.openmausbot.com/enroll?code=ABCDE-FGHIJ", expiresAt: Date.now() + 60_000 },
+  enrollment: { userCode: "ABCDE-FGHIJ", verificationUri: "https://admin.example.test/enroll?code=ABCDE-FGHIJ", expiresAt: Date.now() + 60_000 },
 };
 const connected: ManagedDesktopState = {
   status: "connected",
@@ -128,7 +130,7 @@ describe("organisation sign-in row in the welcome flow", () => {
     signIn.props.onClick!();
     signIn.props.onClick!();
     await flush();
-    expect(bridge.begin).toHaveBeenCalledExactlyOnceWith({ portalOrigin: "https://admin.openmausbot.com" });
+    expect(bridge.begin).toHaveBeenCalledExactlyOnceWith({ portalOrigin: "https://admin.example.test" });
 
     let html = render().html;
     expect(html).toContain("Finish in your browser");

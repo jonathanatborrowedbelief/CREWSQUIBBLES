@@ -1,9 +1,10 @@
-import { brandStatus } from "@/lib/brand";
 import { buyOfferAllowed, type CloudPlanView } from "@/lib/cloud-plan";
 import { t } from "@/lib/i18n";
 import { useStore } from "@/state/store";
 import { localDesktopPage } from "./onboarding/WelcomeGate";
 import { useCloudPlan } from "./ProIntroduction";
+import { brandStatus } from "@/lib/brand";
+import { cloudAccountBridge, promosHidden } from "@/lib/upstream-hidden";
 
 export type SchedulePlace = { kind: "cloud" } | { kind: "server" } | { kind: "local"; next: "add-cloud" | "open-cloud" | null };
 
@@ -21,9 +22,9 @@ export function RoutineScheduleNote() {
   const plan = useCloudPlan();
   const local = localDesktopPage() && window.ogb?.remoteClient?.active !== true;
   const place = schedulePlace({ cloudHome: state.config?.cloudHome === true, local, plan: plan?.view ?? null,
-    ready: plan?.account?.machine?.status === "ready", offersAllowed: brandStatus().source !== "file" });
+    ready: plan?.account?.machine?.status === "ready", offersAllowed: !promosHidden(brandStatus()) });
   const link = "text-left underline underline-offset-2 hover:text-ink";
-  const openCloud = () => { if (window.confirm(t("routines.scheduleNote.leave"))) void window.ogb?.cloudAccount?.connectHome().catch(() => {}); };
+  const openCloud = () => { if (window.confirm(t("routines.scheduleNote.leave"))) void cloudAccountBridge()?.connectHome().catch(() => {}); };
   return <p data-routine-schedule-note={place.kind === "local" ? place.next ?? "local" : place.kind} className="text-[11px] leading-relaxed text-ink-secondary">
     {place.kind === "cloud" ? t("routines.scheduleNote.cloud") : place.kind === "server" ? t("routines.scheduleNote.server") : <>
       {t("routines.scheduleNote.local")}

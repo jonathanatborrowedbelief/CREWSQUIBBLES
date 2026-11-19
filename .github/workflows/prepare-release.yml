@@ -72,12 +72,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.next }}
+          LEGACY_RELEASES_REPO: ${{ vars.LEGACY_RELEASES_REPO }}
         run: |
           if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             echo "::error::v$VERSION already exists in $GITHUB_REPOSITORY"
             exit 1
           fi
-          if gh release view "v$VERSION" --repo milind-soni/openmausbot-releases > /dev/null 2>&1; then
+          if [ -n "$LEGACY_RELEASES_REPO" ] && gh release view "v$VERSION" --repo "$LEGACY_RELEASES_REPO" > /dev/null 2>&1; then
             echo "::error::v$VERSION already exists in the legacy updater mirror"
             exit 1
           fi

@@ -248,7 +248,7 @@ export interface CloudPlanBridge {
 
 export declare const CLOUD_ORIGIN: string;
 export declare const STAGING_CLOUD_ORIGIN: string;
-export declare function cloudTarget(env?: Record<string, string | undefined>): {
+export declare function cloudTarget(env?: Record<string, string | undefined>, stagingOrigin?: string): {
   origin: string; staging: boolean;
   /** Under userData: the sign-in, saved servers, Files' folder, the Cloud's chosen name. */
   file: string; saved: string; places: string; environments: string; sync: string; look: string;
@@ -259,7 +259,7 @@ export declare const CLOUD_CANCEL_ANSWERS: readonly CloudCancelAnswer[];
 /** The survey as main sends it (trimmed; words without a reason as `other`), or null when it says nothing or isn't one. */
 export declare function cancelSurvey(input: unknown): { answer: CloudCancelAnswer; expected?: string; improve?: string } | null;
 export declare function checkoutDestination(value: unknown, options?: { fixture?: boolean; staging?: boolean }): string | null;
-export declare function cloudOrigin(value?: string, fixture?: boolean): string;
+export declare function cloudOrigin(value?: string, fixture?: boolean, stagingOrigin?: string): string;
 export interface CloudAccountStore {
   read(): Promise<unknown>;
   write(value: unknown): Promise<void>;
@@ -379,6 +379,8 @@ export declare function createCloudAccountClient(options: {
   origin?: string;
   /** Enables HTTP loopback only for isolated fixtures. Production main never sets it. */
   fixture?: boolean;
+  /** The staging Admin's origin; empty (the default) while CREW has none. Tests pass a fixture one. */
+  stagingOrigin?: string;
   fetch?: typeof fetch;
   now?: () => number;
   onState?: (state: CloudAccountState) => void;

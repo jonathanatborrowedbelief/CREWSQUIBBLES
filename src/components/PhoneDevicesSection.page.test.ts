@@ -1,8 +1,9 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CompanionState, PhoneSetupController } from "./PhoneSetupFlow";
+import { setUpstreamHidden } from "@/lib/upstream-hidden";
 
 const f = vi.hoisted(() => ({ state: null as object | null, bridge: {} as object, account: null as object | null }));
 vi.mock("@/state/store", () => ({ useStore: () => ({ state: { config: {} } }) }));
@@ -16,7 +17,7 @@ vi.mock("./PhoneSetupFlow", () => ({
   loadCompanionBridgeState: () => null,
   shouldHydrateCompanionEmail: () => false,
 }));
-import { OpenCodeRow, PairDeviceDialog, PhoneDevicesSection, reachLine, routeStateText, showHttpsAddressRow } from "./PhoneDevicesSection";
+import { OpenCodeRow, PairDeviceDialog, PhoneDevicesSection, reachLine, RouteNotices, routeStateText, showHttpsAddressRow } from "./PhoneDevicesSection";
 
 const off = { on: false, since: null };
 const NOV_7 = new Date(2026, 10, 7).getTime();
@@ -199,5 +200,46 @@ describe("open pairing codes", () => {
     expect(html).toContain(">Revoke<");
     expect(html).not.toContain("123456");
     expect(renderToStaticMarkup(createElement(OpenCodeRow, { c: c(), state: state() }))).toBe("");
+  });
+});
+
+describe("upstream's account service hidden (CREW): Anywhere and the free web address go, Same Wi-Fi and Tailscale stay", () => {
+  const held = { available: true, status: "ready", endpoint: "https://c-0123456789abcdef0123456789abcdef.example.test" };
+  const dialog = (overrides: Partial<CompanionState> = {}) =>
+    renderToStaticMarkup(createElement(PairDeviceDialog, { c: c(), state: state(overrides), onClose: () => {} })).replaceAll("&#x27;", "'");
+  afterEach(() => setUpstreamHidden(false));
+
+  it("the page has no Anywhere row and no HTTPS address row, even with an address held; the control with the switch off has both", () => {
+    f.bridge = {};
+    f.account = held;
+    f.state = state({ routes: routes({ wifi: true, tailscale: true }) });
+    expect(page(false), "control: the switch off").toMatch(/data-route-row="relay"[\s\S]*?HTTPS address[\s\S]*?data-route-row="https"/);
+    setUpstreamHidden(true);
+    const html = page(false);
+    expect(html).toContain('data-route-row="wifi"');
+    expect(html).toContain('data-route-row="tailscale"');
+    expect(html).not.toContain('data-route-row="relay"');
+    expect(html).not.toContain('data-route-row="https"');
+    expect(html).not.toContain("HTTPS address");
+    expect(showHttpsAddressRow({ routes: routes({ https: true }) }, held, {})).toBe(false);
+  });
+
+  it("the pairing dialog offers Same Wi-Fi only, with no Anywhere card and no sign-in", () => {
+    f.account = { available: true, status: "signed-out" };
+    expect(dialog(), "control: the switch off").toContain('data-route-card="relay"');
+    setUpstreamHidden(true);
+    const html = dialog();
+    expect(html).toContain('data-route-card="wifi"');
+    expect(html).not.toContain('data-route-card="relay"');
+    expect(html).not.toContain("data-pair-sign-in");
+    expect(html.match(/type="radio"/g)).toHaveLength(1);
+  });
+
+  it("drops the one-time notes about Anywhere and the HTTPS address, and keeps the others", () => {
+    const html = renderToStaticMarkup(createElement(RouteNotices, { c: c(), notices: ["wifi", "relay", "tailscale", "https"] }));
+    expect(html.match(/data-route-notice="(\w+)"/g)).toHaveLength(4);
+    setUpstreamHidden(true);
+    expect(renderToStaticMarkup(createElement(RouteNotices, { c: c(), notices: ["wifi", "relay", "tailscale", "https"] })).match(/data-route-notice="(\w+)"/g)).toEqual(['data-route-notice="wifi"', 'data-route-notice="tailscale"']);
+    expect(renderToStaticMarkup(createElement(RouteNotices, { c: c(), notices: ["relay", "https"] }))).toBe("");
   });
 });

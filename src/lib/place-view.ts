@@ -17,6 +17,7 @@ import {
   type ServerKind,
 } from "../../shared/place-view";
 import { canUseMcpServer } from "../../shared/tool-scope";
+import { cloudAccountBridge, cloudPlanBridge } from "@/lib/upstream-hidden";
 
 export const placeTranslate: PlaceTranslate = (key, params) => t(key as LocaleKey, params);
 
@@ -102,7 +103,7 @@ export function placeHasIssue(view: PlaceView): boolean {
 }
 
 export function useCloudPlanPaid(): boolean {
-  const bridge = typeof window === "undefined" || window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+  const bridge = typeof window === "undefined" || window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
   const [account, setAccount] = useState<CloudAccountState | null>(null);
   useEffect(() => {
     if (!bridge) return;
@@ -141,14 +142,15 @@ export function openPlaceAction(
       return true;
     case "open-team-map": dispatch({ type: "showTeamMap" }); return true;
     case "see-plan": {
-      const desktop = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+      const desktop = window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
       if (desktop) { void desktop.openDashboard().catch(() => {}); return true; }
-      if (window.ogb?.cloudPlan) { void window.ogb.cloudPlan.manage().catch(() => {}); return true; }
+      const plan = cloudPlanBridge();
+      if (plan) { void plan.manage().catch(() => {}); return true; }
       appSettings("cloudAccount");
       return true;
     }
     case "open-my-cloud": {
-      const desktop = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+      const desktop = window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
       if (desktop) void desktop.connectHome().catch(() => {});
       else appSettings("cloudAccount");
       return true;

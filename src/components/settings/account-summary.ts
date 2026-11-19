@@ -4,6 +4,7 @@ import { cloudPlanLabel, cloudPlanView } from "@/lib/cloud-plan";
 import { t } from "@/lib/i18n";
 import { profileForSession, readSessionState, type SessionState } from "@/lib/session";
 import { useStore } from "@/state/store";
+import { cloudAccountBridge, cloudPlanBridge } from "@/lib/upstream-hidden";
 
 export interface AccountSummary {
   /** read from the account bridge, the plan bridge or the server session; null until it answers */
@@ -31,8 +32,8 @@ function fromPlan(plan: CloudPlanSnapshot | null): AccountSummary {
 
 /** Who is signed in to MausBot on this device, as far as this page may know. */
 export function useAccountSummary(): AccountSummary {
-  const account = typeof window === "undefined" || window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
-  const planBridge = account ? undefined : typeof window === "undefined" ? undefined : window.ogb?.cloudPlan;
+  const account = typeof window === "undefined" || window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
+  const planBridge = account ? undefined : typeof window === "undefined" ? undefined : cloudPlanBridge();
   const [summary, setSummary] = useState<AccountSummary>({ signedIn: null, email: null, plan: null, paid: false });
   useEffect(() => {
     let alive = true;

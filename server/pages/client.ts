@@ -28,7 +28,9 @@ interface Minted {
   plan?: string;
 }
 
-export const SIGN_IN_MESSAGE = "Publishing a page needs a CREW account. Sign in to CREW in the app's Settings, then ask again.";
+/** Publishing goes through a CREW Cloud account (the pages service); CREW has no Cloud sign-in today, so there is nothing to
+ * sign in to and no request is made: the bot says it isn't available. Bring the old "sign in" sentence back with a Cloud. */
+export const SIGN_IN_MESSAGE = "Publishing pages isn't available in CREW yet.";
 const UNAVAILABLE = "Publishing isn't available right now. Try again in a few minutes.";
 const NOT_TURNED_ON = "Publishing pages isn't turned on for this account yet.";
 /** A server with no desktop app to sign in through and no Cloud home (`openmausbot serve`): no Settings sign-in can help. */

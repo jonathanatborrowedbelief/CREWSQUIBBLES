@@ -3138,7 +3138,7 @@
   "remote.client.server.invalidLink": "Dán liên kết ghép nối máy chủ HTTPS đầy đủ, chẳng hạn như https://bots.example.com/pair#code=XXXX-XXXX-XXXX. Mã phải nằm sau ký tự #, không phải trong chuỗi truy vấn URL.",
   "remote.client.server.switchNote": "Xác nhận địa chỉ, sau đó hoàn tất việc ghép nối trên trang máy chủ. Sử dụng menu Máy chủ để quay lại máy tính này sau.",
   "remote.client.companion.option": "Ứng dụng desktop đồng hành",
-  "remote.client.companion.hint": "Trên ứng dụng desktop còn lại, mở Cài đặt → Điện thoại và thiết bị và tạo mã đồng hành 6 chữ số. Sử dụng địa chỉ HTTPS {app} được quản lý hoặc tên miền Tailscale đầy đủ kết thúc bằng .ts.net. Đối với máy chủ tự lưu trữ hoặc miền tùy chỉnh, hãy chọn Máy chủ tự lưu trữ trong ứng dụng trên máy tính này.",
+  "remote.client.companion.hint": "Trên ứng dụng desktop còn lại, mở Cài đặt → Điện thoại và thiết bị và tạo mã đồng hành 6 chữ số. Sử dụng tên miền Tailscale đầy đủ kết thúc bằng .ts.net. Đối với máy chủ tự lưu trữ hoặc miền tùy chỉnh, hãy chọn Máy chủ tự lưu trữ trong ứng dụng trên máy tính này.",
   "remote.client.companion.address": "Địa chỉ ứng dụng đồng hành",
   "remote.client.companion.code": "Mã đồng hành 6 chữ số",
   "vm.state.notManaged": "Không được quản lý",

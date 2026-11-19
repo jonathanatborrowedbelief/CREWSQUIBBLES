@@ -6,6 +6,7 @@ import {
   TEAM_LIBRARY_CATALOG_URL,
   TEAM_LIBRARY_RAW_ROOT,
   fetchGithubTeam,
+  fetchTeamCatalog,
   fetchLibraryTeam,
   githubManifestUrls,
   libraryTeamRoles,
@@ -57,12 +58,31 @@ function response(value: unknown, status = 200): Response {
 describe("team library", () => {
   it("validates catalog paths and adds the trusted repository URL", () => {
     const parsed = parseTeamCatalog(catalog);
-    expect(parsed.repositoryUrl).toBe("https://github.com/milind-soni/openmausbot-teams");
+    expect(parsed.repositoryUrl).toBe("https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES");
     expect(parsed.teams[0]).toMatchObject({ slug: "engineering", members: 1 });
 
     const unsafe = structuredClone(catalog);
     unsafe.teams[0]!.manifest = "../private.json";
     expect(() => parseTeamCatalog(unsafe)).toThrow("safe catalog path");
+  });
+
+  it("reads a library with no catalog.json yet (HTTP 404) as an empty library, not an error", async () => {
+    const asked: string[] = [];
+    const missing = vi.fn(async (url: string | URL | Request) => { asked.push(String(url)); return new Response("404: Not Found", { status: 404 }); }) as unknown as typeof fetch;
+    expect(await fetchTeamCatalog(missing)).toEqual({
+      format: "openmaus.catalog", version: 1, repositoryUrl: "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES", teams: [],
+    });
+    expect(asked).toEqual([TEAM_LIBRARY_CATALOG_URL]);
+    // Only a missing file is empty: a server error, a block or a network failure still says so.
+    await expect(fetchTeamCatalog(vi.fn(async () => response({}, 503)) as unknown as typeof fetch)).rejects.toThrow("HTTP 503");
+    await expect(fetchTeamCatalog(vi.fn(async () => response({}, 403)) as unknown as typeof fetch)).rejects.toThrow("HTTP 403");
+    await expect(fetchTeamCatalog(vi.fn(async () => { throw new Error("offline"); }) as unknown as typeof fetch)).rejects.toThrow("offline");
+  });
+
+  it("with an empty library no team is found, and no error is raised before that", async () => {
+    const missing = vi.fn(async () => new Response("404: Not Found", { status: 404 })) as unknown as typeof fetch;
+    await expect(fetchLibraryTeam("engineering", missing)).rejects.toMatchObject({ message: "That library team was not found", status: 404 });
+    expect(await libraryTeamRoles(missing)).toEqual([]);
   });
 
   it("loads only the manifest selected by the trusted catalog", async () => {

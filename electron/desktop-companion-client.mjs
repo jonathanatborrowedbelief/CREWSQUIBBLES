@@ -45,19 +45,19 @@ const cleanLabel = (value, fallback) => {
  * add the control-plane entry with that release as its minAppVersion. */
 export const NEXT_MANAGED_COMPANION_HOST_SUFFIX = "";
 
-/** Every zone the control plane makes addresses in, lowercase apex names. Ship a new domain here first. */
+/** Every zone the control plane makes addresses in, lowercase apex names. Ship a new domain here first. Empty: no free web address is ever paired with, only Tailscale names. */
 export const MANAGED_COMPANION_HOST_SUFFIXES = Object.freeze(
-  ["openmausbot.com", "mausbot.si", NEXT_MANAGED_COMPANION_HOST_SUFFIX].filter(Boolean),
+  [NEXT_MANAGED_COMPANION_HOST_SUFFIX].filter(Boolean),
 );
 
 /** Only the control plane's `c-<32 hex>` names: any other name in those zones never receives a pairing code. */
-export function managedCompanionHostname(hostname) {
+export function managedCompanionHostname(hostname, suffixes = MANAGED_COMPANION_HOST_SUFFIXES) {
   const match = /^c-[0-9a-f]{32}\.(.+)$/.exec(String(hostname ?? ""));
-  return Boolean(match) && MANAGED_COMPANION_HOST_SUFFIXES.includes(match[1]);
+  return Boolean(match) && Array.isArray(suffixes) && suffixes.includes(match[1]);
 }
 
 /** HTTPS, or a Tailscale MagicDNS name (WireGuard protects its HTTP); a LAN IP would put the long-lived bearer on Wi-Fi in plaintext. */
-export function normalizeDesktopCompanionEndpoint(value) {
+export function normalizeDesktopCompanionEndpoint(value, suffixes = MANAGED_COMPANION_HOST_SUFFIXES) {
   let raw = String(value ?? "").trim();
   if (!raw) return "";
   if (!/^https?:\/\//i.test(raw)) {
@@ -72,7 +72,7 @@ export function normalizeDesktopCompanionEndpoint(value) {
   const hostname = parsed.hostname.toLowerCase();
   const tailscaleHttp = parsed.protocol === "http:" && hostname.endsWith(".ts.net");
   const managedHttps =
-    parsed.protocol === "https:" && managedCompanionHostname(hostname);
+    parsed.protocol === "https:" && managedCompanionHostname(hostname, suffixes);
   if (
     (!tailscaleHttp && !managedHttps) ||
     parsed.username ||
@@ -135,7 +135,7 @@ export async function pairDesktopCompanion({
 }) {
   const endpoint = normalizeDesktopCompanionEndpoint(rawEndpoint);
   if (!endpoint) {
-    throw new Error("Enter the CREW HTTPS companion address or full Tailscale name ending in .ts.net");
+    throw new Error("Enter the full Tailscale name ending in .ts.net");
   }
   const code = String(rawCode ?? "").trim();
   if (!PAIRING_CODE.test(code)) throw new Error("Enter the six-digit code shown on the other computer");

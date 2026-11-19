@@ -21,7 +21,7 @@ const SCOUT = { id: "scout", name: "Scout", threadId: "scout-main", modelSelecti
 const ROVER = { id: "rover", name: "Rover", threadId: "rover-main", modelSelection: { instanceId: "codex", model: "gpt-5.5", effort: "high" } };
 
 function fixture(options: { dataDir?: string; sections?: string[]; outcomes?: SendOutcome[]; sessions?: PublicSession[]; ownerKey?: string | null; team?: boolean;
-  profileEmail?: string; automated?: boolean; lineLanguage?: DevsReportsDeps["lineLanguage"]; appVersion?: string; clock?: number;
+  profileEmail?: string; automated?: boolean; off?: boolean; lineLanguage?: DevsReportsDeps["lineLanguage"]; appVersion?: string; clock?: number;
   /** The conversations, kept across a restart (another fixture on the same data). */
   threads?: Map<string, Message[]>;
   /** The MausBot team's answer to each question about this app's reports; none: no answer (offline). */
@@ -68,7 +68,8 @@ function fixture(options: { dataDir?: string; sections?: string[]; outcomes?: Se
     appsReady: () => false, sessions: () => options.sessions ?? [], ownerKey: options.ownerKey ?? null, team: options.team === true,
     profileEmail: () => options.profileEmail, language: () => "en", ...(options.lineLanguage ? { lineLanguage: options.lineLanguage } : {}),
     recentLog: () => ["2026-10-27T08:59:00.000Z warn engine probe slow"],
-    send: async (payload) => { sent.push(payload); return outcomes.shift() ?? { ok: true, id: `report-${sent.length}` }; },
+    send: Object.assign(async (payload: DevsReportPayload) => { sent.push(payload); return outcomes.shift() ?? { ok: true, id: `report-${sent.length}` }; },
+      { off: options.off === true }),
     askStatus: async (question) => { asked.push(question); return options.answer?.(question) ?? null; },
     tell: (threadId, text, person) => { told.push({ threadId, text, ...(person ? { person } : {}) }); },
     now: () => clock, timer: false,
@@ -91,6 +92,33 @@ function fixture(options: { dataDir?: string; sections?: string[]; outcomes?: Se
   return { reports, store, sent, busy, person, bot, call, settle, notices, dataDir, asked, told, line, drop, threads, now: () => clock,
     advance: (ms: number) => { clock += ms; }, stop: () => reports.stop() };
 }
+
+describe("bug reports off (no OMB_BUG_REPORT_URL, CREW's default)", () => {
+  it("never tags, queues, sends or asks: a @devs message is plain text, report_bug says it is off, and no note rides on the turn", async () => {
+    const fx = fixture({ off: true });
+    fx.person("scout-main", "@devs pictures never load");
+    fx.busy.add("scout-main");
+    expect(fx.reports.note("scout-main", true)).toBe("");
+    const answer = await fx.call("scout", "scout-main", { went_wrong: "Pictures never load" });
+    expect(answer.status).toBe(409);
+    expect(String(answer.body.error)).toContain("turned off");
+    fx.busy.delete("scout-main");
+    fx.advance(NO_ANSWER_MS + LONGEST_WAIT_MS + STATUS_EVERY_MS);
+    await fx.settle();
+    expect(fx.sent).toEqual([]);
+    expect(fx.asked).toEqual([]);
+    expect(fx.notices("scout-main")).toEqual([]);
+    expect(() => readFileSync(join(fx.dataDir, DEVS_REPORTS_FILE), "utf8")).toThrow();
+  });
+
+  it("negative control: the same message with the address set (not off) does send", async () => {
+    const fx = fixture();
+    fx.person("scout-main", "@devs pictures never load");
+    fx.advance(NO_ANSWER_MS + 1);
+    await fx.settle();
+    expect(fx.sent).toHaveLength(1);
+  });
+});
 
 describe("a message that tags @devs", () => {
   it("sends one report with the bot's summary when the bot calls report_bug, and the bot's reply tells the person", async () => {

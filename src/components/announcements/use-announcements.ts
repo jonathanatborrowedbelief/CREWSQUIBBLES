@@ -5,7 +5,6 @@ import { announcementHistory, announcementsUnread, markAnnouncementsRead, useAnn
 import { announcementConditions, announcementFeedUpdatedAt, announcementPlan, announcementPlatform, announcementSurface, cardsForPerson, providersRestricted,
   SPONSOR_CARDS_FOR_TEAM_MEMBERS, useAnnouncementCards } from "@/lib/announcements";
 import { appVersion } from "@/lib/app-links";
-import { brandStatus } from "@/lib/brand";
 import { cloudPlanView } from "@/lib/cloud-plan";
 import { activeLocale } from "@/lib/i18n";
 import { modelgoOfferable } from "@/lib/modelgo-offer";
@@ -14,12 +13,14 @@ import type { WelcomeViewer } from "@/lib/onboarding";
 import { useStore } from "@/state/store";
 import { useDesktopNotices } from "../desktop-notices";
 import { localDesktopPage, useWelcomeViewer } from "../onboarding/WelcomeGate";
+import { brandStatus } from "@/lib/brand";
+import { cloudAccountBridge, cloudPlanBridge, organizationBridge, promosHidden } from "@/lib/upstream-hidden";
 
 /** An organization runs this desktop: null while main answers; false in a browser. */
 function useOrganization(): boolean | null {
-  const [organization, setOrganization] = useState<boolean | null>(window.ogb?.organization ? null : false);
+  const [organization, setOrganization] = useState<boolean | null>(organizationBridge() ? null : false);
   useEffect(() => {
-    const org = window.ogb?.organization;
+    const org = organizationBridge();
     if (!org) return;
     let active = true;
     const read = (next: { status: string; organization?: unknown }) => { if (active) setOrganization(next.status !== "signed-out" && Boolean(next.organization)); };
@@ -63,19 +64,19 @@ export function useAnnouncements(now: () => number = Date.now): Announcements {
   const viewer = useWelcomeViewer();
   const remote = window.ogb?.remoteClient?.active === true;
   const local = localDesktopPage();
-  const bridge = !remote && local ? window.ogb?.cloudAccount : undefined;
+  const bridge = !remote && local ? cloudAccountBridge() : undefined;
   const desktop = remote ? undefined : window.ogb?.desktopNotices;
   const desktopState = useDesktopNotices(desktop);
   const organization = useOrganization();
   const account = useCloudAccount(bridge);
-  const branded = brandStatus().source === "file";
+  const branded = promosHidden(brandStatus());
   const team = Boolean(state.config?.team);
   const canSave = viewer?.canSave !== false;
   const cloudHome = Boolean(state.config?.cloudHome || viewer?.cloudHome);
   const sponsors = SPONSOR_CARDS_FOR_TEAM_MEMBERS || !team || viewer?.canSave === true;
   const facts: HistoryFacts = {
     branded, organization, remote, team, canSave, sponsors,
-    cloudSale: Boolean(bridge && desktop), cloudCards: Boolean(bridge || (!remote && cloudHome && window.ogb?.cloudPlan)),
+    cloudSale: Boolean(bridge && desktop), cloudCards: Boolean(bridge || (!remote && cloudHome && cloudPlanBridge())),
     modelgo: modelgoOfferable(state.config?.managedPolicy),
   };
   const surface = announcementSurface(local, cloudHome);

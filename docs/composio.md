@@ -16,7 +16,7 @@ The desktop app validates the key before saving it. The key is encrypted using E
 
 ## MausBot Cloud
 
-A MausBot Cloud plan includes connected apps: there is no key to add. At every start a Cloud home's server makes sure it has its own installation on OpenMausBot's managed connection service, the same one the packaged desktop app registers with (`server/cloud-connected-apps.ts`, sharing `electron/managed-composio.mjs` with the app):
+CREW has no managed connection service of its own yet, so with no `OMB_COMPOSIO_BROKER_URL` named, a Cloud home registers nowhere and connected apps use the owner's own Composio project key, as on the desktop (see [Keeping traffic off the managed service](#keeping-traffic-off-the-managed-service)). What follows holds once a service is named: a MausBot Cloud plan then includes connected apps and there is no key to add. At every start a Cloud home's server makes sure it has its own installation on the managed connection service, the same one the packaged desktop app registers with (`server/cloud-connected-apps.ts`, sharing `electron/managed-composio.mjs` with the app):
 
 - The first start registers the installation (`POST /v1/installations`) and keeps its token in `connected-apps-installation.json` in the data folder (`/data/.openmausbot`), owner-only (0600). The token is never written to `config.json`, sent to a client or logged.
 - Every later start serves that token at once and checks it with `GET /v1/me`. Only a refusal (401) registers a new installation; an outage or a rate limit keeps the token, so the Cloud's connected accounts are never stranded.
@@ -24,12 +24,12 @@ A MausBot Cloud plan includes connected apps: there is no key to add. At every s
 - The file never goes into a backup or a move to another computer, and a restore keeps the Cloud's own (`server/workspace-backup-policy.ts`): its connected accounts belong to that installation.
 - A Composio project key the owner saves under **Self-host connected apps** still wins, and while it is saved the server sends the service nothing, not even its start-up check. Clearing it returns to the included service, within about a minute.
 
-The built image uses the default service; `OMB_COMPOSIO_BROKER_URL` names another (a staging service, or a closed port in CI). The server run from source registers only with an explicitly named service, so development and tests never create installations on the real one.
+There is no default service: `DEFAULT_MANAGED_COMPOSIO_BROKER_URL` in `electron/managed-composio.mjs` is blank, so nothing is registered and no request goes to a broker. `OMB_COMPOSIO_BROKER_URL` names one (our own, a staging service, or a closed port in CI). The server run from source registers only with an explicitly named service, so development and tests never create installations on a real one.
 
 ## App events
 
 An app-event automation runs a bot when something happens in a connected app: a new Gmail message, a Slack
-message in a channel, a HubSpot deal changing stage. It uses Composio triggers through the managed service, on
+message in a channel, a HubSpot deal changing stage. It uses Composio triggers through the managed service (so it needs one to be named: see above), on
 the desktop, a headless server and a Cloud alike:
 
 1. `trigger` (`action: "create"`, `when: "app_event"`) or the editor saves the automation in `app-triggers.json` in the data
@@ -60,7 +60,7 @@ schedule that checks the app, or a webhook, does the job instead.
 
 **With your own project key saved**, the desktop app and a Cloud home do not register or check in with OpenMausBot's managed service, and connected apps go to Composio directly. An app-event automation made before the key was saved can still be paused, deleted or restored, but only here: its copy on the service is left alone and removed if you later go back to the service.
 
-**`OMB_COMPOSIO_BROKER=off`** in the environment of the desktop app, a server or a Cloud home turns the service off whether or not a key is saved: no registration, check-in, tool calls or app events. Connected apps then need your own key, and show the setup message until there is one. A saved installation is kept for if the switch is removed. `OMB_COMPOSIO_BROKER_URL` is not a switch: left blank it means the default service.
+**`OMB_COMPOSIO_BROKER=off`** in the environment of the desktop app, a server or a Cloud home turns the service off whether or not a key is saved: no registration, check-in, tool calls or app events. Connected apps then need your own key, and show the setup message until there is one. A saved installation is kept for if the switch is removed. `OMB_COMPOSIO_BROKER_URL` is not a switch, and left blank it means no service: there is no default broker, so connected apps run on your own Composio project key (**Settings → API keys → Composio project key**), and the desktop app sets `OMB_COMPOSIO_BROKER=off` for its server so Connected apps says it needs setup instead of reporting an outage. Name a service in `OMB_COMPOSIO_BROKER_URL` to bring the managed path back.
 
 A Team Cloud's per-person apps (**each person connects their own**) follow the same rule. With the team's key saved, each member is their own Composio user in the team's project (`omb_member_…`, made from the team's id and a hash of the person, never their address), and their connect links, connections, tool calls and disconnects go to Composio with the team's key. A member who leaves has that user's connections removed from the project; if Composio can't be reached then, it is tried again at the next start. App events are not available for them, as for the team's own apps with a key.
 

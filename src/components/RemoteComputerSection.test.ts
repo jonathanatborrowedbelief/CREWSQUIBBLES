@@ -77,8 +77,9 @@ describe("remote connection Settings", () => {
     expect(html).toContain("Companion address");
     expect(html).toContain("Six-digit companion code");
     expect(html).toContain('placeholder="000000"');
-    expect(html).toContain("managed CREW HTTPS address");
+    expect(html, "no managed address: CREW has no free web address").not.toMatch(/managed|openmausbot|mausbot/i);
     expect(html).toContain("Tailscale name ending in .ts.net");
+    expect(html).toContain('placeholder="computer.tailnet.ts.net"');
     expect(html).not.toContain("<select");
     expect(html).not.toContain("Server pairing link");
   });

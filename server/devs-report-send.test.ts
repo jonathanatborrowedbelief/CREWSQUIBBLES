@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { DevsReportPayload } from "./devs-report.ts";
-import { askReportStatus, bugReportEndpoint, bugReportsHomeSignature, bugReportStatusEndpoint, devsStatusAsker, sendDevsReport } from "./devs-report-send.ts";
+import { askReportStatus, bugReportEndpoint, bugReportsHomeSignature, bugReportStatusEndpoint, devsReportSender, devsStatusAsker, sendDevsReport } from "./devs-report-send.ts";
 
 const PAYLOAD: DevsReportPayload = {
   installId: "4b7c1f2e-0a9d-4c2b-9f1e-6d5a4b3c2d1e", source: "bot", description: "it broke", appVersion: "0.1.128", platform: "darwin arm64, desktop app",
@@ -58,13 +58,26 @@ describe("sending a @devs report", () => {
 });
 
 describe("where reports go", () => {
-  it("is a fixture's loopback or https address, else a Cloud home's own origin, else the staging or production Cloud", () => {
+  it("is a fixture's loopback or https address from OMB_BUG_REPORT_URL, and nowhere else: unset is OFF, never upstream's Cloud", () => {
     expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "http://127.0.0.1:4400/api/bug-reports" })).toBe("http://127.0.0.1:4400/api/bug-reports");
-    expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "http://192.0.2.1/api/bug-reports" })).toBe("https://cloud.openmausbot.com/api/bug-reports");
-    expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "https://user:pw@evil.example/x" })).toBe("https://cloud.openmausbot.com/api/bug-reports");
-    expect(bugReportEndpoint({}, "https://cloud.openmausbot.com")).toBe("https://cloud.openmausbot.com/api/bug-reports");
-    expect(bugReportEndpoint({ OMB_CLOUD_STAGING: "1" })).toBe("https://omb-cloud-staging.fly.dev/api/bug-reports");
-    expect(bugReportEndpoint({})).toBe("https://cloud.openmausbot.com/api/bug-reports");
+    expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "https://reports.example/api/bug-reports" })).toBe("https://reports.example/api/bug-reports");
+    expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "http://192.0.2.1/api/bug-reports" })).toBe("");
+    expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "https://user:pw@evil.example/x" })).toBe("");
+    expect(bugReportEndpoint({ OMB_BUG_REPORT_URL: "not an address" })).toBe("");
+    expect(bugReportEndpoint({})).toBe("");
+    // A Cloud home's Admin origin and the staging switch no longer pick a default.
+    expect(bugReportEndpoint({}, "https://cloud.openmausbot.com")).toBe("");
+    expect(bugReportEndpoint({ OMB_CLOUD_STAGING: "1" })).toBe("");
+  });
+
+  it("with no address (off) sends nothing and asks nothing, and tells createDevsReports it is off", async () => {
+    const { sent, fetcher } = endpoint(answer(201, { id: "r1" }), answer(200, { reports: [], notify: true }));
+    const send = devsReportSender("", fetcher);
+    expect(send.off).toBe(true);
+    expect(await send(PAYLOAD)).toEqual({ ok: false, retry: false, why: "refused", detail: "bug reports are turned off" });
+    expect(await devsStatusAsker("", null, fetcher)({ installId: "i", ids: ["a"] })).toBeNull();
+    expect(sent).toHaveLength(0);
+    expect(devsReportSender("https://reports.example/api/bug-reports", fetcher).off).toBe(false);
   });
 });
 

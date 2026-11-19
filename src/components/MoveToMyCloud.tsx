@@ -10,10 +10,11 @@ import { t } from "@/lib/i18n";
 import type { Bot } from "@/state/store";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { NotNowButton, PRIMARY_BUTTON } from "./NoticeCard";
+import { cloudSendBridge } from "@/lib/upstream-hidden";
 
 type MenuItem = (icon: ReactNode, label: string, onClick?: () => void, opts?: { disabled?: boolean; hint?: string }) => ReactNode;
 
-const bridge = () => (!window.ogb?.remoteClient?.active ? window.ogb?.cloudSendPage : undefined);
+const bridge = () => (!window.ogb?.remoteClient?.active ? cloudSendBridge() : undefined);
 
 /** Which bots go to My Cloud: any of them, found by name, or everything with one press. */
 export function MoveChooser({ onClose }: { onClose: () => void }) {

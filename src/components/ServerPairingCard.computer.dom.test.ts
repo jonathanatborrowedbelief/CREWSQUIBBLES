@@ -78,7 +78,7 @@ it("makes the link from the shared address when the server gave none", () => {
 it("keeps the phone wording for phones", async () => {
   const phone = await openDialog(false);
   expect(phone.label).toBe("Pair a phone");
-  expect(phone.text).toContain("on your phone");
+  expect(phone.text).toContain("Install the phone app");
   expect(phone.qr).toBe(true);
   expect(phone.dialog.querySelector("[data-pairing-address]")).toBeNull();
   expect(phone.buttons).toEqual([{ text: "Copy link", primary: false }, { text: "Done", primary: true }]);

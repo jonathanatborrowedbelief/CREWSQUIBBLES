@@ -3481,7 +3481,7 @@
   "remote.client.server.invalidLink": "Pega un enlace de vinculación HTTPS completo del servidor, por ejemplo https://bots.example.com/pair#code=XXXX-XXXX-XXXX. El código va después de #, no en la consulta de la URL.",
   "remote.client.server.switchNote": "Confirma la dirección y luego termina la vinculación en la página del servidor. Más tarde, usa el menú Server para volver a este equipo.",
   "remote.client.companion.option": "App de escritorio complementaria",
-  "remote.client.companion.hint": "En la otra app de escritorio, abre Ajustes → Teléfono y dispositivos y crea un código de vinculación de seis dígitos. Usa su dirección HTTPS de {app} gestionada o su nombre completo de Tailscale terminado en .ts.net. Para un servidor autoalojado o un dominio personalizado, elige «Servidor autoalojado» en la app instalada en este equipo.",
+  "remote.client.companion.hint": "En la otra app de escritorio, abre Ajustes → Teléfono y dispositivos y crea un código de vinculación de seis dígitos. Usa su nombre completo de Tailscale terminado en .ts.net. Para un servidor autoalojado o un dominio personalizado, elige «Servidor autoalojado» en la app instalada en este equipo.",
   "remote.client.companion.address": "Dirección de la app complementaria",
   "remote.client.companion.code": "Código de vinculación de seis dígitos",
   "vm.state.notManaged": "No gestionado",

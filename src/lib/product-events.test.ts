@@ -19,6 +19,8 @@ const ph = vi.hoisted(() => ({
   }),
 }));
 vi.mock("posthog-js", () => ph.module());
+// CREW ships no PostHog key; these tests exercise the code path a build WITH a key takes (VITE_CREW_POSTHOG_KEY).
+vi.stubEnv("VITE_CREW_POSTHOG_KEY", "phc_crew_test_key_not_a_real_project");
 
 const store = new Map<string, string>();
 vi.stubGlobal("localStorage", {

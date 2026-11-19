@@ -3138,7 +3138,7 @@
   "remote.client.server.invalidLink": "https://bots.example.com/pair#code=XXXX-XXXX-XXXX gibi tam bir HTTPS sunucu eşleştirme bağlantısı yapıştırın. Kod URL sorgusunda değil, # işaretinden sonra yer almalıdır.",
   "remote.client.server.switchNote": "Adresi onaylayın, ardından eşleştirme işlemini sunucu sayfasında tamamlayın. Daha sonra bu bilgisayara dönmek için Sunucu menüsünü kullanın.",
   "remote.client.companion.option": "Masaüstü yardımcısı",
-  "remote.client.companion.hint": "Diğer masaüstü uygulamasında Ayarlar → Telefon ve cihazlar bölümünü açın ve altı haneli bir yardımcı kodu oluşturun. Yönetilen {app} HTTPS adresini veya .ts.net ile biten tam Tailscale adını kullanın. Kendi barındırdığınız bir sunucu veya özel alan adı için bu bilgisayardaki kurulu uygulamada Kendi barındırdığınız sunucu seçeneğini belirleyin.",
+  "remote.client.companion.hint": "Diğer masaüstü uygulamasında Ayarlar → Telefon ve cihazlar bölümünü açın ve altı haneli bir yardımcı kodu oluşturun. .ts.net ile biten tam Tailscale adını kullanın. Kendi barındırdığınız bir sunucu veya özel alan adı için bu bilgisayardaki kurulu uygulamada Kendi barındırdığınız sunucu seçeneğini belirleyin.",
   "remote.client.companion.address": "Yardımcı adresi",
   "remote.client.companion.code": "Altı haneli yardımcı kodu",
   "vm.state.notManaged": "Yönetilmiyor",

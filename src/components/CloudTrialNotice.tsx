@@ -5,6 +5,7 @@ import type { CloudTrialState } from "../../electron/cloud-home.mjs";
 import type { CloudTrialView } from "@/lib/cloud-plan";
 import { t } from "@/lib/i18n";
 import { NoticeCard, NotNowButton, PRIMARY_BUTTON } from "./NoticeCard";
+import { cloudAccountBridge } from "@/lib/upstream-hidden";
 
 export const CLOUD_PLAN_REFRESH_MS = 5 * 60_000;
 const PLAN_CHANGED = "omb:cloud-plan-changed";
@@ -17,7 +18,7 @@ export function useCloudPlanSnapshot(bridge: CloudPlanBridge | undefined): Cloud
     let active = true;
     const stop = () => { active = false; unsubscribe?.(); clearInterval(timer); window.removeEventListener?.("focus", read); window.removeEventListener?.(PLAN_CHANGED, read); };
     const read = () => { void bridge.state().then(next => { if (active) setPlan(next); }, () => { if (active) setPlan({ status: "none" }); stop(); }); };
-    const unsubscribe = window.ogb?.cloudAccount?.onState(read);
+    const unsubscribe = cloudAccountBridge()?.onState(read);
     const timer = setInterval(read, CLOUD_PLAN_REFRESH_MS);
     window.addEventListener?.("focus", read);
     window.addEventListener?.(PLAN_CHANGED, read);

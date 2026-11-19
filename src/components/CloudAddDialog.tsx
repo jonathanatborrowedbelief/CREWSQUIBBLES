@@ -19,6 +19,7 @@ import { PayScreen } from "./cloud-buy/PayScreen";
 import { CLOSE, ON_NIGHT, SHEET, StagingMark } from "./cloud-buy/parts";
 import { SetupScreen, TeamReadyScreen, TeamSetupScreen } from "./cloud-buy/SetupScreen";
 import { BrowserSignInScreen, codeDigits, SignInScreen } from "./cloud-buy/SignInScreen";
+import { cloudAccountBridge } from "@/lib/upstream-hidden";
 
 export interface CloudAddActions {
   /** A plan card's button: the in-app sign-in when signed out, then (or else) that plan's checkout. */
@@ -112,7 +113,7 @@ type Note = "copied" | "pay-failed" | "interest-sent" | "interest-failed" | null
 export function CloudAddDialog({ now = Date.now }: { now?: () => number }) {
   const { state, dispatch } = useStore();
   const request = state.cloudAdd;
-  const bridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+  const bridge = window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
   const [account, setAccount] = useState<CloudAccountState | null>(null);
   const [offer, setOffer] = useState<CloudOffer | null | undefined>(undefined);
   const [chosen, setChosen] = useState<string | null>(null);

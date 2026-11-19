@@ -20,6 +20,7 @@ import { NewOrganization } from "./cloud-buy/NewOrganization";
 import { BackLink, FIELD, Heading, PRIMARY_WIDE } from "./cloud-buy/parts";
 import { Layer, useIsTopLayer } from "./Layer";
 import { SwatchRadios } from "./SwatchRadios";
+import { upstreamHidden } from "@/lib/upstream-hidden";
 
 const PAIR_COMMAND = "npx openmausbot pair";
 
@@ -249,9 +250,11 @@ export function NewLocalFromMenu() {
 }
 
 export function PlaceAddSheet({ choices, places = [], connect = null, onClose, onAccount }: { choices: RailAddChoices; places?: readonly RailPlace[]; connect?: { name: string } | null; onClose: () => void; onAccount?: () => void }) {
-  const server = choices.link, organization = choices.organization === true, account = choices.account === true && Boolean(onAccount), local = choices.local === true;
-  const several = [local, organization, choices.cloud, server, account].filter(Boolean).length > 1;
-  const [view, setView] = useState<"choose" | "local" | "cloud" | "server" | "organization">(connect ? "server" : several ? "choose" : local ? "local" : organization ? "organization" : choices.cloud ? "cloud" : "server");
+  const shown = !upstreamHidden();
+  const server = choices.link, organization = choices.organization === true && shown, account = choices.account === true && Boolean(onAccount) && shown, local = choices.local === true;
+  const cloud = Boolean(choices.cloud) && shown;
+  const several = [local, organization, cloud, server, account].filter(Boolean).length > 1;
+  const [view, setView] = useState<"choose" | "local" | "cloud" | "server" | "organization">(connect ? "server" : several ? "choose" : local ? "local" : organization ? "organization" : cloud ? "cloud" : "server");
   const [wide, setWide] = useState(false);
   const workspaces = window.ogb?.workspaces;
   const firstCloud = () => {
@@ -265,7 +268,7 @@ export function PlaceAddSheet({ choices, places = [], connect = null, onClose, o
       {local && <Choice kind="local" icon={<Laptop size={19} />} title={t("rail.local")} sub={t("rail.localSub")} onClick={() => setView("local")} />}
       <div className="flex flex-col gap-3 sm:flex-row">
         {organization && <Choice kind="organization" icon={<Building2 size={19} />} title={t("rail.org")} sub={t("rail.orgSub")} onClick={() => setView("organization")} />}
-        {choices.cloud && <Choice kind="cloud" icon={<Cloud size={19} />} title={t("rail.buy")} sub={t("rail.buySub")} onClick={() => setView("cloud")} />}
+        {cloud && <Choice kind="cloud" icon={<Cloud size={19} />} title={t("rail.buy")} sub={t("rail.buySub")} onClick={() => setView("cloud")} />}
         {server && <Choice kind="server" icon={<Server size={19} />} title={t("connect.title")} sub={t("connect.choiceSub")} onClick={() => setView("server")} />}
         {account && <Choice kind="account" icon={<UserRound size={19} />} title={t("accounts.add")} sub={t("rail.accountSub")} onClick={() => onAccount!()} />}
       </div>

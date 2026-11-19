@@ -1414,7 +1414,7 @@ describe("ACP turns (fake CLI)", () => {
       expect(await recorder.until((event) => event.type === "turn.completed")).toMatchObject({ ok: true });
       const text = recorder.events.find((event) => event.type === "item.completed" && (event as { itemType?: string }).itemType === "assistant_text");
       expect((text as { text?: string } | undefined)?.text).toBe("voluum: report,campaigns");
-      expect(strict.initializes).toEqual([{ protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "OpenMausBot tool proxy", version: "1" } }]);
+      expect(strict.initializes).toEqual([{ protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "CREW tool proxy", version: "1" } }]);
     } finally {
       delete process.env.FAKE_ACP_MCP_TRANSPORTS;
       await strict.close();

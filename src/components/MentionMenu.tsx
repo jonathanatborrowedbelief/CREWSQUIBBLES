@@ -18,6 +18,12 @@ export type MentionChoice = { id: string; name: string; bot?: Bot; person?: Team
 /** The last row of every @ list: a message that tags it is a bug report the app sends to the MausBot team. */
 export const DEVS_CHOICE: MentionChoice = { id: "__devs__", name: DEVS_TAG, devs: true };
 
+/** @devs is offered unless this server says bug reports are off (`bugReports: false`: OMB_BUG_REPORT_URL is not set, so nothing
+ * would be sent). A server that never said (older, or a Cloud's) keeps it. */
+export function devsChoices(config: { bugReports?: boolean } | null | undefined): MentionChoice[] {
+  return config?.bugReports === false ? [] : [DEVS_CHOICE];
+}
+
 /** The @ list's rows for a Team Cloud's teammates, after the bots. */
 export function teammateChoices(people: readonly TeamPerson[]): MentionChoice[] {
   return people.map((person) => ({ id: `person:${person.email}`, name: person.name, person }));

@@ -40,6 +40,8 @@ import { AppNotices } from "./AppNotices";
 import { TwoPlacesCard } from "./TwoPlacesCard";
 import { BOAT_OFFER_NOTICE, CLOUD_INTRO, GROK_MOVE_NOTICE, launchNotice, localDay, MODELGO_OFFER_NOTICE, PRODUCT_HUNT_NOTICE, PRODUCT_HUNT_UNTIL, PRODUCT_HUNT_URL, STAR_NOTICE, TEAMS_NOTICE, WHATS_NEW_NOTICE } from "@/lib/notices";
 import { BOAT_OFFER, boatClaimMailto } from "@/lib/boat-offer";
+import { CLOUD_SITE } from "@/lib/whats-new";
+import { setUpstreamHidden } from "@/lib/upstream-hidden";
 import { track } from "@/lib/analytics";
 import { ADVANCED_MODE_KEY, setAdvancedMode } from "@/lib/interface-mode";
 import { SIMPLE_MODE_PROMPT_KEY } from "@/lib/simple-mode-prompt";
@@ -671,13 +673,13 @@ describe("What's new after the update", () => {
   it("See the new Cloud and Start a Team open the Cloud website with their slide's tag, and end it for good", async () => {
     await launch();
     press("See the new Cloud"); await flush();
-    expect(window.ogb?.openExternal).toHaveBeenCalledWith("https://cloud.openmausbot.com/cloud?src=app_whats_new_pro");
+    expect(window.ogb?.openExternal).toHaveBeenCalledWith(`${CLOUD_SITE}/cloud?src=app_whats_new_pro`);
     expect(steps().at(-1)).toEqual(step("see_cloud", "pro"));
     await keptForGood();
     fresh(); vi.mocked(window.ogb!.openExternal!).mockClear();
     await relaunch(); press("Next");
     press("Start a Team"); await flush();
-    expect(window.ogb?.openExternal).toHaveBeenCalledWith("https://cloud.openmausbot.com/pro/buy?plan=team&src=app_whats_new_team");
+    expect(window.ogb?.openExternal).toHaveBeenCalledWith(`${CLOUD_SITE}/pro/buy?plan=team&src=app_whats_new_team`);
     expect(steps().at(-1)).toEqual(step("start_team", "team"));
     await keptForGood();
   });
@@ -1857,7 +1859,7 @@ describe("the Teams What's new", () => {
     expect(steps()).toContain("seen");
     expect(vi.mocked(track)).toHaveBeenCalledWith("whats_new", { action: "seen", slide: "teams", audience: "no_team", campaign: TEAMS_NOTICE });
     press("Start a team"); await flush();
-    expect(window.ogb?.openExternal).toHaveBeenCalledWith("https://cloud.openmausbot.com/pro/buy?plan=team&src=app_whats_new_teams");
+    expect(window.ogb?.openExternal).toHaveBeenCalledWith(`${CLOUD_SITE}/pro/buy?plan=team&src=app_whats_new_teams`);
     expect(steps().at(-1)).toBe("start_team");
     expect(hints()).toContain(TEAMS_NOTICE); expect(desktopMarks()).toContain(TEAMS_NOTICE);
     expect(render(), "nothing else that launch").toBe("");
@@ -1936,5 +1938,23 @@ describe("the Teams What's new", () => {
     expect(await launch(), "the launch the welcome finished in").not.toContain(TITLE);
     expect(steps()).toEqual([]);
     expect(await relaunch(), "the next launch").toContain(TITLE);
+  });
+});
+
+describe("CREW's switch that hides upstream's Cloud and promos", () => {
+  it("shows no Cloud card, What's new, Teams, Boat, ModelGo, Product Hunt, star or product-updates question; the same launch with the switch off shows some", async () => {
+    // Only the Simple mode popup (CREW's own) starts seen; every upstream card is due.
+    returning(); storage.clear(); storage.set(SIMPLE_MODE_PROMPT_KEY, "1"); desk.saved = null;
+    setUpstreamHidden(true);
+    try {
+      expect(await launch(), "hidden").toBe("");
+      expect(bridges.cloud.offer, "no offer is asked of the Cloud").not.toHaveBeenCalled();
+      expect(bridges.cloud.state, "no sign-in is read").not.toHaveBeenCalled();
+      expect(vi.mocked(api).mock.calls.map(([path]) => path), "the announcements feed is not asked for").not.toContain("/api/announcements");
+    } finally { setUpstreamHidden(false); }
+    // Control: the same person, with the popups already seen as in the other tests, gets the Cloud card once the switch is off.
+    desk = desktopMachine(); launchCardsSeen(); showWindow(LOCAL_ORIGIN);
+    expect(await relaunch(), "control: the switch off").toContain(INTRO);
+    expect(vi.mocked(api).mock.calls.map(([path]) => path), "control: and the feed is asked for").toContain("/api/announcements");
   });
 });

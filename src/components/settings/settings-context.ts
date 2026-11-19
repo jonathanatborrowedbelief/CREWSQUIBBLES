@@ -10,6 +10,7 @@ import { useOwnerOrAdmin } from "@/lib/use-owner-or-admin";
 import { useStore } from "@/state/store";
 import { workspacesAvailable } from "../WorkspacesSection";
 import type { SettingsContext } from "./settings-index";
+import { cloudAccountBridge, cloudPlanBridge, organizationBridge } from "@/lib/upstream-hidden";
 
 export function useSettingsContext(): SettingsContext {
   const { state } = useStore();
@@ -31,8 +32,8 @@ export function useSettingsContext(): SettingsContext {
     client,
     admin,
     places: known > 1 || (!ogb?.environments && railShown(places)),
-    plan: desktop ? Boolean(ogb?.cloudAccount || (ogb?.cloudPlan && cloud)) : cloud && !team && admin,
-    organization: Boolean(ogb?.organization) && !client,
+    plan: desktop ? Boolean(cloudAccountBridge() || (cloudPlanBridge() && cloud)) : cloud && !team && admin,
+    organization: Boolean(organizationBridge()) && !client,
     environments: Boolean(ogb?.environments),
     installations: workspacesAvailable(state.config),
     skills: skillsLibraryEnabled(state.config),

@@ -312,6 +312,10 @@ describe("profileMenuItems", () => {
     expect(items[0]).toMatchObject({ label: "Ada Lovelace", subtitle: "Pro · ada@example.com", large: true, chevron: true });
   });
 
+  it("has no Feedback row when it is given no way to send feedback (CREW has no channel of its own yet)", () => {
+    expect(build({ onFeedback: undefined }).find((item) => item.key === "support")!.submenu!.map((item) => item.key)).toEqual(["help", "shortcuts", "about"]);
+  });
+
   it("only offers what this window has: no Phone & devices for a paired client, no Plan & billing without a plan", () => {
     expect(build({ phone: null, plan: null }).map((item) => item.key)).toEqual(["account", "settings", "support"]);
   });

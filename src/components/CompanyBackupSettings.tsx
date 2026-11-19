@@ -5,6 +5,7 @@ import { activeLocale, t } from "@/lib/i18n";
 import { collectWorkspaceClientState, WORKSPACE_RESTORE_MARKER } from "@/lib/workspace-backup-client";
 import { Card, Switch } from "./SettingsPrimitives";
 import { WorkspaceBackupRestartNotice, WorkspaceBackupSummaryView } from "./WorkspaceBackupSettings";
+import { organizationBridge } from "@/lib/upstream-hidden";
 
 type BackupBridge = NonNullable<NonNullable<Window["ogb"]>["companyBackups"]>;
 type BackupList = Awaited<ReturnType<BackupBridge["list"]>>;
@@ -23,7 +24,7 @@ const dateLabel = (entry: CompanyBackupEntry) => {
 
 /** Security: local connection snapshots are allowed here; cloud calls start only below the capability gate. */
 export function CompanyBackupSettings() {
-  const organization = window.ogb?.remoteClient?.active ? undefined : window.ogb?.organization;
+  const organization = window.ogb?.remoteClient?.active ? undefined : organizationBridge();
   const bridge = organization ? window.ogb?.companyBackups : undefined;
   const [connection, setConnection] = useState<ManagedDesktopState | null>(null);
   const generation = useRef(0);

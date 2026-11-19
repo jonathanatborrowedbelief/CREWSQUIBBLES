@@ -6,7 +6,6 @@ import { existsSync, readdirSync, readFileSync, statfsSync } from "node:fs";
 import { arch, cpus, homedir, release, totalmem } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 
-import { PRODUCTION_CLOUD_ORIGIN } from "../devs-report-send.ts";
 import { EXIT, flag, usageError } from "./args.ts";
 import type { VerbContext, VerbOutcome } from "./context.ts";
 
@@ -53,6 +52,7 @@ export interface HostOptions {
 const GB = 1_000_000_000;
 const SIGNED_REQUEST_SKEW_S = 300;
 const NTP_FIX = "sudo timedatectl set-ntp true";
+const CLOCK_REFERENCE_URL = "https://api.github.com";
 
 const ok = (id: string, message: string): HostCheck => ({ id, status: "ok", message });
 const warn = (id: string, message: string, fix?: string): HostCheck => ({ id, status: "warn", message, ...(fix ? { fix } : {}) });
@@ -291,7 +291,7 @@ export function systemProbe(): HostProbe {
     async clockOffset() {
       try {
         const before = Date.now();
-        const response = await fetch(PRODUCTION_CLOUD_ORIGIN, { method: "HEAD", redirect: "manual", signal: AbortSignal.timeout(5_000) });
+        const response = await fetch(CLOCK_REFERENCE_URL, { method: "HEAD", redirect: "manual", headers: { "user-agent": "CREW-doctor" }, signal: AbortSignal.timeout(5_000) });
         const after = Date.now();
         const date = Date.parse(response.headers.get("date") ?? "");
         // An HTTP date is whole seconds: the server's clock was somewhere in the second after it.

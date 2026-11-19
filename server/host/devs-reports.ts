@@ -113,7 +113,8 @@ export interface DevsReportsDeps {
   recentLog: RecentLog;
   /** Timing lines for these conversations and bots: numbers, fixed codes and opaque ids only. */
   performance?(filter: { threadIds: readonly string[]; botIds: readonly string[] }): string[];
-  send(payload: DevsReportPayload): Promise<SendOutcome>;
+  /** `off`: no report address is set (OMB_BUG_REPORT_URL), so @devs does nothing at all; see devsReportSender. */
+  send: ((payload: DevsReportPayload) => Promise<SendOutcome>) & { off?: boolean };
   /** Asks the MausBot team about reports this app sent (devs-report-send.ts `askReportStatus`); null: no answer this time. */
   askStatus(question: ReportStatusQuestion): Promise<ReportStatusAnswer | null>;
   /** One notification about a line in this conversation; `person`, on a Team Cloud, the only one it reaches. */
@@ -212,6 +213,8 @@ export function createDevsReports(deps: DevsReportsDeps) {
   const { store } = deps;
   const now = deps.now ?? Date.now;
   const file = join(deps.dataDir, DEVS_REPORTS_FILE);
+  /** Bug reports are off unless OMB_BUG_REPORT_URL is set (CREW's default): nothing is tagged, queued, sent, retried or asked about. */
+  const off = deps.send.off === true;
   let waiting: Waiting[] = [];
   let outbox: Queued[] = [];
   let tracked: Tracked[] = [];
@@ -427,6 +430,7 @@ export function createDevsReports(deps: DevsReportsDeps) {
   }
 
   function tick(): void {
+    if (off) return;
     for (const entry of waiting) {
       if (inFlight.has(entry.messageId)) continue;
       if (deps.working(entry.threadId)) {
@@ -455,6 +459,7 @@ export function createDevsReports(deps: DevsReportsDeps) {
 
   /** report_bug from the bot answering a @devs message in this conversation. */
   async function fromBot(botId: string, threadId: string, summary: BotSummary): Promise<{ status: number; text: string }> {
+    if (off) return { status: 409, text: "Bug reports are turned off in this CREW (no report address is set), so report_bug sends nothing. Do not call it again." };
     const bot = store.bot(botId);
     const entry = waiting.filter((one) => one.threadId === threadId).at(-1);
     if (!bot || !entry) {
@@ -470,7 +475,7 @@ export function createDevsReports(deps: DevsReportsDeps) {
   }
 
   function personWrote(threadId: string, line: Message): void {
-    if (seen.has(line.id) || !line.text || now() - line.at > FRESH_MS) return;
+    if (off || seen.has(line.id) || !line.text || now() - line.at > FRESH_MS) return;
     if (!line.sendId && deps.automated(threadId)) return;
     const typed = ownWords(withoutPastes(line.text));
     if (!typed.some((part) => tagsDevs(part))) return;
@@ -499,13 +504,14 @@ export function createDevsReports(deps: DevsReportsDeps) {
     }
   });
   // A waiting @devs line polls whether its turn is still running; otherwise nothing is due before a retry or a status ask.
-  const timer = deps.timer === false ? null : startDueTimer({ run: tick, now, retryMs: TICK_MS,
+  const timer = deps.timer === false || off ? null : startDueTimer({ run: tick, now, retryMs: TICK_MS,
     next: () => waiting.length || told.length ? now() : Math.min(nextAskAt, ...outbox.map((queued) => queued.nextAt)) });
 
   return {
     /** The note on a turn in this conversation while a @devs message waits for its summary (none for a turn without
      * OpenMausBot's tools); and, on the first turn after its line, that a report's fix runs here now. Empty otherwise. */
     note(threadId: string, tools: boolean): string {
+      if (off) return "";
       const fixed = tracked.filter((one) => one.threadId === threadId && one.told !== undefined && !one.noted);
       for (const one of fixed) one.noted = true;
       if (fixed.length) save();

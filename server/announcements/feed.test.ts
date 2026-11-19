@@ -23,7 +23,7 @@ const answer = (body: unknown, init: ResponseInit = { status: 200 }) => new Resp
 function subject(options: { fetch?: typeof fetch; dir?: string; env?: NodeJS.ProcessEnv; bundled?: AnnouncementFeed } = {}) {
   let time = NOW;
   const log = vi.fn();
-  const store = new AnnouncementStore({ dataDir: options.dir ?? dataDir(), bundled: options.bundled ?? bundled, now: () => time, log, env: options.env ?? {}, fetch: options.fetch });
+  const store = new AnnouncementStore({ dataDir: options.dir ?? dataDir(), bundled: options.bundled ?? bundled, now: () => time, log, env: options.env ?? { [ANNOUNCEMENTS_DISABLE_ENV]: "0" }, fetch: options.fetch });
   return { store, log, advance: (ms: number) => { time += ms; } };
 }
 
@@ -35,6 +35,22 @@ it("bundles the repository's file, and never fetches while switched off", async 
   await store.refresh({ force: true });
   expect(fetchMock).not.toHaveBeenCalled();
   expect(store.disabled).toBe(true);
+});
+
+it("is off by default (nothing downloaded, no card) and only OMB_DISABLE_ANNOUNCEMENTS=0 turns it on", async () => {
+  const fetchMock = vi.fn(async () => answer(feed("2026-12-01T09:00:00Z", [card("remote")])));
+  const { store } = subject({ fetch: fetchMock as unknown as typeof fetch, env: {}, bundled: feed("2026-11-01T00:00:00Z", [card("bundled-card")]) });
+  expect(store.disabled).toBe(true);
+  expect(await store.cardsForPage()).toEqual([]);
+  await store.refresh({ force: true });
+  expect(fetchMock).not.toHaveBeenCalled();
+  const on = subject({ fetch: fetchMock as unknown as typeof fetch, env: { [ANNOUNCEMENTS_DISABLE_ENV]: "0" } });
+  expect(on.store.disabled).toBe(false);
+  expect((await on.store.cardsForPage()).map((entry) => entry.id)).toEqual(["remote"]);
+});
+
+it("the feed is our fork's, never upstream's", () => {
+  expect(ANNOUNCEMENTS_URL).toBe("https://raw.githubusercontent.com/jonathanatborrowedbelief/CREWSQUIBBLES/rebrand/announcements/announcements.json");
 });
 
 it("tests never reach the network: the suite switches it off for every server it starts", () => {

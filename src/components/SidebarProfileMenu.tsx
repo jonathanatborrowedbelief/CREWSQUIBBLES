@@ -68,6 +68,7 @@ import {
   type CloudPhoneDestination,
   type PhoneDestination,
 } from "@/lib/phone-pairing";
+import { cloudAccountBridge, cloudPlanBridge, upstreamHidden } from "@/lib/upstream-hidden";
 
 export function profileInitials(profile?: { name?: string; email?: string }): string {
   const name = profile?.name?.trim();
@@ -266,7 +267,7 @@ export function useServerUpdateItem(enabled: boolean): UpdateEntry | null {
 }
 
 export function useCloudPhoneDestination(enabled: boolean): { cloud: CloudPhoneDestination; bridge?: CloudAccountBridge } {
-  const bridge = enabled && !window.ogb?.remoteClient?.active ? window.ogb?.cloudAccount : undefined;
+  const bridge = enabled && !window.ogb?.remoteClient?.active ? cloudAccountBridge() : undefined;
   const [account, setAccount] = useState<CloudAccountState | null>(null);
   useEffect(() => {
     if (!bridge) return;
@@ -472,7 +473,8 @@ export function profileMenuItems({
   onShortcuts: () => void;
   onAbout: () => void;
   onHelp: () => void;
-  onFeedback: () => void;
+  /** Left out while upstream's Discord is the only feedback channel (hidden with the rest of upstream, src/lib/upstream-hidden.ts). */
+  onFeedback?: () => void;
   onWhatsNew?: () => void;
   /** Announcements, with its red dot while one is new to the person */
   announcements?: { unread: boolean; onSelect: () => void; active: boolean } | null;
@@ -492,7 +494,7 @@ export function profileMenuItems({
     { key: "help", label: t("sidebar.menu.help"), icon: <HelpCircle size={16} />, onSelect: onHelp },
     ...(onWhatsNew ? [{ key: "whats-new", label: t("sidebar.menu.whatsNew"), icon: <Sparkles size={16} />, onSelect: onWhatsNew }] : []),
     { key: "shortcuts", label: t("sidebar.menu.shortcuts"), icon: <Keyboard size={16} />, trailing: keyHint(shortcutLabel("shortcuts-cheat-sheet")), onSelect: onShortcuts },
-    { key: "feedback", label: t("sidebar.menu.feedback"), icon: <MessageSquare size={16} />, onSelect: onFeedback },
+    ...(onFeedback ? [{ key: "feedback", label: t("sidebar.menu.feedback"), icon: <MessageSquare size={16} />, onSelect: onFeedback }] : []),
     ...(update && !raised ? [{ ...update, separatorBefore: true }] : []),
     { key: "about", label: t("sidebar.menu.aboutApp", { app: productName() }), icon: <Info size={16} />, separatorBefore: !(update && !raised), onSelect: onAbout },
   ];
@@ -541,7 +543,7 @@ export function SidebarProfileMenu({ iconOnly = false, rail = false, circle = fa
   const [menuOpen, setMenuOpen] = useState(false);
   const advancedMode = useAdvancedMode();
   const automationsNeedYou = useAutomationsNeedYou();
-  const planSnapshot = useCloudPlanSnapshot(usageBridge(state.config?.cloudHome === true) ?? (window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudPlan));
+  const planSnapshot = useCloudPlanSnapshot(usageBridge(state.config?.cloudHome === true) ?? (window.ogb?.remoteClient?.active ? undefined : cloudPlanBridge()));
   const cloudUsage = cloudUsageSummary(planSnapshot);
   const phoneState = usePhonePlaceState(menuOpen);
   const place = useSettingsPlace();
@@ -575,13 +577,13 @@ export function SidebarProfileMenu({ iconOnly = false, rail = false, circle = fa
   const besideRail = railShown(usePlaces());
   const filesReady = useCloudFilesReady();
   const desktop = Boolean(window.ogb);
-  const planHere = !remote && (desktop ? Boolean(window.ogb?.cloudAccount || (window.ogb?.cloudPlan && state.config?.cloudHome === true))
+  const planHere = !remote && (desktop ? Boolean(cloudAccountBridge() || (cloudPlanBridge() && state.config?.cloudHome === true))
     : state.config?.cloudHome === true && !state.config?.team && isOwnerOrAdmin(session));
   const openSettings = (section: AppSettingsSection) => dispatch({ type: "toggleAppSettings", open: true, section });
   const move = useAccountMove(state.config?.cloudHome === true, { onOpen: () => openSettings("plan"), onPairPhone: () => dispatch(phonePairingSettingsAction()) });
   const accounts = useAccounts();
   const news = useAnnouncements();
-  const openSource = desktop && !window.ogb?.cloudAccount && !window.ogb?.cloudPlan;
+  const openSource = desktop && !cloudAccountBridge() && !cloudPlanBridge();
   const planLine = !desktop ? undefined : cloudUsage ? t("sidebar.menu.plan.used", { plan: summary.plan ?? cloudPlanLabel(planSnapshot?.tier), percent: cloudUsage.value.replace(/\D+/g, "") })
     : summary.signedIn === false || summary.plan === t("settings.account.free") ? t("sidebar.menu.plan.free") : summary.plan ?? undefined;
 
@@ -620,15 +622,15 @@ export function SidebarProfileMenu({ iconOnly = false, rail = false, circle = fa
     },
     onAbout: () => setAboutOpen(true),
     onHelp: () => void openExternalLink(HELP_CENTER_URL),
-    onFeedback: () => void openExternalLink(FEEDBACK_URL),
+    onFeedback: upstreamHidden() ? undefined : () => void openExternalLink(FEEDBACK_URL),
     onWhatsNew: () => void openExternalLink(RELEASES_URL),
-    announcements: { unread: news.unread, active: state.activeView === "announcements", onSelect: () => dispatch({ type: "showAnnouncements" }) },
+    announcements: news.items.length === 0 ? null : { unread: news.unread, active: state.activeView === "announcements", onSelect: () => dispatch({ type: "showAnnouncements" }) },
     // Every Sign out asks first: "Sign out of MausBot?" and what keeps running.
     signOut: accounts.view?.active ? null
       : !desktop && session?.kind === "session" ? () => setSigningOut("browser")
-      : desktop && !remote && window.ogb?.cloudAccount && summary.signedIn ? () => setSigningOut("desktop")
+      : desktop && !remote && cloudAccountBridge() && summary.signedIn ? () => setSigningOut("desktop")
       : null,
-    signOutElsewhere: desktop && !remote && !here && !window.ogb?.cloudAccount && summary.signedIn && openComputer
+    signOutElsewhere: desktop && !remote && !here && !cloudAccountBridge() && summary.signedIn && openComputer
       ? { place: t("rail.thisComputer"), open: () => void openComputer("account").catch(() => {}) } : null,
   });
   const noteworthy = update && updateNoteworthy(update.phase, update.pending) && !updateHasButton(update.phase);
@@ -709,7 +711,7 @@ export function SidebarProfileMenu({ iconOnly = false, rail = false, circle = fa
         cloud={signingOut === "desktop" && summary.plan ? t("cloudSetup.myCloud") : null} onClose={() => setSigningOut(null)}
         onConfirm={() => signingOut === "browser"
           ? api("/api/auth/logout", { method: "POST" }).finally(() => location.reload())
-          : window.ogb?.cloudAccount?.signOut()} />}
+          : cloudAccountBridge()?.signOut()} />}
       {accounts.sheet && <AccountsSheet adding={accounts.sheet.email} note={accounts.sheet.note} onClose={accounts.closeSheet} />}
     </>
   );

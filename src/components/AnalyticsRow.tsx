@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { analyticsEnabled, setAnalyticsEnabled } from "@/lib/analytics";
+import { analyticsAvailable, analyticsEnabled, setAnalyticsEnabled } from "@/lib/analytics";
 import { t } from "@/lib/i18n";
 import { SettingRow, Switch } from "./SettingsPrimitives";
 
@@ -7,6 +7,8 @@ const ANALYTICS_DOC_URL = "https://github.com/jonathanatborrowedbelief/CREWSQUIB
 
 export function AnalyticsRow({ simple = false }: { simple?: boolean }) {
   const [on, setOn] = useState(analyticsEnabled);
+  // No PostHog key in this build (the default): nothing is sent, so there is no switch to show. SettingsGroup hides its empty card.
+  if (!analyticsAvailable()) return null;
   const subtitle = (
     <>
       {t(simple ? "settings.simple.analytics" : "settings.analytics.subtitle")}{" "}

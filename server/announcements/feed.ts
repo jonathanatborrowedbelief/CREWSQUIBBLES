@@ -12,7 +12,8 @@ import { ANNOUNCEMENTS_URL, liveCards, parseAnnouncementFeed, type AnnouncementC
 import { writeFileAtomic } from "../atomic.ts";
 import { DATA_DIR } from "../config.ts";
 
-/** "1" stops the download and every remote card on this server's pages, the bundled ones included. */
+/** Announcements are OFF by default in CREW: no download and no card, the bundled ones included. Set this to "0" to turn them
+ * on (the feed is then our fork's announcements/announcements.json, see shared/announcements.ts); "1" or unset keeps them off. */
 export const ANNOUNCEMENTS_DISABLE_ENV = "OMB_DISABLE_ANNOUNCEMENTS";
 export const ANNOUNCEMENTS_TTL_MS = 60 * 60 * 1000;
 /** Back off failed fetches, so an offline computer does not try on every page load. */
@@ -68,7 +69,7 @@ export class AnnouncementStore {
   }
 
   get disabled(): boolean {
-    return (this.options.env ?? process.env)[ANNOUNCEMENTS_DISABLE_ENV] === "1";
+    return (this.options.env ?? process.env)[ANNOUNCEMENTS_DISABLE_ENV] !== "0";
   }
 
   /** The newest usable copy. Reads the disk cache once and never waits on the network. */
@@ -167,7 +168,7 @@ export class AnnouncementStore {
     const timer = setTimeout(() => controller.abort(), this.options.timeoutMs ?? ANNOUNCEMENTS_FETCH_TIMEOUT_MS);
     try {
       const response = await (this.options.fetch ?? fetch)(ANNOUNCEMENTS_URL, {
-        headers: { accept: "application/json", "user-agent": "OpenMausBot" },
+        headers: { accept: "application/json", "user-agent": "CREW" },
         // Nothing of the person's goes with it.
         credentials: "omit",
         referrerPolicy: "no-referrer",

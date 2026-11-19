@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import type { CloudFilesBridge, CloudFilesState } from "../../electron/cloud-sync.mjs";
+import { cloudAccountBridge } from "@/lib/upstream-hidden";
 
 /** Files lives in this computer's own window: a companion connected to another computer has none. */
 export function cloudFilesBridge(): CloudFilesBridge | undefined {
-  return window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount?.files;
+  return window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge()?.files;
 }
 
 /** Main's Files state, kept current; null until main answers (and when main can't). */

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import nativeText from "./native-text.cjs";
 import { accessToken, fixture, until } from "./fixtures/cloud-account.mjs";
-import { cancelSurvey, CHECKOUT_SOURCES, checkoutDestination, cloudMenuSublabel, createCloudAccountStore, cloudOrigin, cloudPlanSnapshot, CLOUD_ORIGIN } from "./cloud-account.mjs";
+import { cancelSurvey, CHECKOUT_SOURCES, checkoutDestination, cloudMenuSublabel, createCloudAccountClient, createCloudAccountStore, cloudOrigin, cloudPlanSnapshot, CLOUD_ORIGIN } from "./cloud-account.mjs";
 
 
 test("Cloud origin is fixed; only explicit fixtures can use loopback", () => {
@@ -13,6 +13,25 @@ test("Cloud origin is fixed; only explicit fixtures can use loopback", () => {
   for (const value of ["https://attacker.example.test", "http://127.0.0.1:1234", `${CLOUD_ORIGIN}/`, `${CLOUD_ORIGIN}/?paid=true`]) assert.throws(() => cloudOrigin(value));
   assert.equal(cloudOrigin("http://127.0.0.1:1234", true), "http://127.0.0.1:1234");
   assert.throws(() => cloudOrigin("https://attacker.example.test", true));
+});
+
+test("CREW has no Cloud of its own yet: the default origin is empty, and a client on it never reaches a network, a browser or the saved sign-in", async () => {
+  assert.equal(CLOUD_ORIGIN, "");
+  assert.equal(cloudOrigin(""), "");
+  const calls = [], reads = [], writes = [];
+  const client = createCloudAccountClient({ fetch: async (...args) => { calls.push(args); throw new Error("no network"); }, deviceName: "Mac", platform: "darwin",
+    store: { read: async () => { reads.push(1); return { origin: "https://elsewhere.example.test", token: `omc_${"T".repeat(43)}` }; }, write: async value => { writes.push(value); } },
+    openBrowser: async url => { calls.push(url); }, setTimer: () => 1, clearTimer: () => {} });
+  try {
+    assert.equal((await client.start()).status, "signed-out");
+    assert.equal(await client.offer(), null, "no plans are offered");
+    assert.equal((await client.begin()).status, "signed-out", "no sign-in starts");
+    assert.equal((await client.emailStart("person@example.test")).outcome, "failed", "no code is sent");
+    await assert.rejects(client.openDashboard(), /not set up/);
+    assert.deepEqual(calls, [], "nothing was fetched and no browser was opened");
+    assert.deepEqual(reads, [], "a saved sign-in is not even read");
+    assert.deepEqual(writes, [], "and never removed");
+  } finally { client.close(); }
 });
 
 test("fresh startup stays local with no enrollment, browser, or network; explicit sign-in uses private polling", async t => {

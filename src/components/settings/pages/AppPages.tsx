@@ -30,6 +30,7 @@ import { useSettingsShell } from "../settings-shell";
 import { PlaceBadge } from "../SettingsNav";
 import { InertRow, useSwitchToComputer } from "../inert";
 import { useOtherPlaces } from "../settings-context";
+import { upstreamHidden } from "@/lib/upstream-hidden";
 
 /** A row this page can't change because it lives on This computer: not on the app's own home page (main's home:page). */
 const elsewhere = (bridge: unknown, ctx: { desktop: boolean; here: boolean; home: boolean; client: boolean }) => ctx.desktop && !ctx.client && !ctx.here && !ctx.home && !bridge;
@@ -72,7 +73,7 @@ export function AppPage() {
       <SettingsRows>
         <SettingsLinkRow title={t("sidebar.menu.help")} external onClick={() => void openExternalLink(HELP_CENTER_URL)} />
         {/* Simple keeps the Help card short: feedback, shortcuts and the tour are in the outer menu's Help too. */}
-        {ctx.advanced && <SettingsLinkRow title={t("sidebar.menu.feedback")} external onClick={() => void openExternalLink(FEEDBACK_URL)} />}
+        {ctx.advanced && !upstreamHidden() && <SettingsLinkRow title={t("sidebar.menu.feedback")} external onClick={() => void openExternalLink(FEEDBACK_URL)} />}
         {ctx.advanced && <SettingsLinkRow title={t("sidebar.menu.shortcuts")} onClick={() => { dispatch({ type: "toggleAppSettings", open: false }); dispatch({ type: "toggleShortcuts", open: true }); }} />}
         {ctx.advanced && !ctx.client && <ReplayTourRow />}
         {desk && ctx.advanced && (window.ogb?.exportDiagnostics ? <DiagnosticsRow simple /> : <InertRow title={t("settings.app.diagnostics")}

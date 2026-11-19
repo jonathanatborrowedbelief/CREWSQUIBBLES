@@ -3,7 +3,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setLocale } from "@/lib/i18n";
-import type { WhatsNewAction, WhatsNewSlide, WhatsNewView } from "@/lib/whats-new";
+import { CLOUD_SITE, STAGING_SITE, type WhatsNewAction, type WhatsNewSlide, type WhatsNewView } from "@/lib/whats-new";
 
 vi.mock("@/components/Avatar", () => ({ MausAvatar: ({ color }: { color: string }) => createElement("i", { "data-maus": color }) }));
 const { WhatsNewPopup } = await import("./WhatsNewPopup");
@@ -120,12 +120,12 @@ describe("the What's new popup", () => {
 
     vi.clearAllMocks(); await show();
     await click("See the new Cloud"); await flush();
-    expect(window.ogb!.openExternal).toHaveBeenCalledWith("https://cloud.openmausbot.com/cloud?src=app_whats_new_pro");
+    expect(window.ogb!.openExternal).toHaveBeenCalledWith(`${CLOUD_SITE}/cloud?src=app_whats_new_pro`);
     expect(props.onDone).toHaveBeenCalledOnce(); expect(steps.at(-1)).toEqual(["see_cloud", "pro"]);
 
     vi.clearAllMocks(); await show(); await click("Next");
     await click("Start a Team"); await flush();
-    expect(window.ogb!.openExternal).toHaveBeenCalledWith("https://cloud.openmausbot.com/pro/buy?plan=team&src=app_whats_new_team");
+    expect(window.ogb!.openExternal).toHaveBeenCalledWith(`${CLOUD_SITE}/pro/buy?plan=team&src=app_whats_new_team`);
     expect(props.onDone).toHaveBeenCalledOnce(); expect(steps.at(-1)).toEqual(["start_team", "team"]);
     expect(props.onBuy).not.toHaveBeenCalled();
   });
@@ -141,7 +141,7 @@ describe("the What's new popup", () => {
   it("an app on the staging Admin opens the staging Cloud website", async () => {
     await show({ ...BOTH, staging: true }); await click("Next");
     await click("Start a Team"); await flush();
-    expect(window.ogb!.openExternal).toHaveBeenCalledWith("https://omb-cloud-staging.fly.dev/pro/buy?plan=team&src=app_whats_new_team");
+    expect(window.ogb!.openExternal).toHaveBeenCalledWith(`${STAGING_SITE}/pro/buy?plan=team&src=app_whats_new_team`);
   });
 
   it("a browser that won't open keeps it up and says so", async () => {

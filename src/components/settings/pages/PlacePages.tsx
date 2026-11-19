@@ -39,6 +39,7 @@ import { ServerUpdateRow } from "../../ServerUpdateRow";
 import { versionLine } from "../settings-context";
 import { useSettingsShell } from "../settings-shell";
 import { AdvancedSection } from "../AdvancedSection";
+import { cloudSendBridge } from "@/lib/upstream-hidden";
 
 const GROUPED_NOTE = "omb-settings-grouped-note";
 const GROUPED_DAYS = 30;
@@ -201,6 +202,6 @@ export function DesktopsPage() {
 
 export function MoveSection() {
   const { ctx } = useSettingsShell();
-  if (!ctx.here || !window.ogb?.cloudSendPage) return null;
-  return <CloudKeepHere bridge={window.ogb.cloudSendPage} />;
+  if (!ctx.here || !cloudSendBridge()) return null;
+  return <CloudKeepHere bridge={cloudSendBridge()!} />;
 }

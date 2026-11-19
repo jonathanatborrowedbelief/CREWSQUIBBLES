@@ -99,7 +99,7 @@ function BotLimitDialog({ reason, created, onClose }: { reason: BotLimitReason; 
             <div className="mt-5 w-full">
               <UpgradeButton usage={usage} upgrade={{ busy: upgrade.busy, note: upgrade.note, onUpgrade: upgrade.start }} className="w-full justify-center" />
             </div>
-          ) : !bridge ? (
+          ) : !bridge ? (CLOUD_PLAN_URL &&
             <div className="mt-5 w-full [&>div]:w-full"><LinkButton url={CLOUD_PLAN_URL} label={t("botLimit.openPlan")} className={cn(PRIMARY_BUTTON, "w-full justify-center")} /></div>
           ) : plan !== null ? (
             <button type="button" className={cn(PRIMARY_BUTTON, "mt-5 w-full justify-center")} onClick={() => { setPlanFailed(false); void bridge.manage().then(onClose, () => setPlanFailed(true)); }}>

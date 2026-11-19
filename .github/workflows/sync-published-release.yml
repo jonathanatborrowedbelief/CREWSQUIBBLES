@@ -13,6 +13,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Off for CREW (variable unset): there are no legacy installs to bridge. See release.yml.
+  LEGACY_RELEASES_REPO: ${{ vars.LEGACY_RELEASES_REPO }}
+
 concurrency:
   # A workflow-published release emits the same `release` event as a manual
   # GitHub UI publish. Share the assemble lock so the recovery mirror waits
@@ -138,6 +142,7 @@ jobs:
           EOF
 
       - name: Create or update the legacy updater mirror
+        if: env.LEGACY_RELEASES_REPO != ''
         env:
           GH_TOKEN: ${{ secrets.RELEASES_PAT }}
           CANONICAL_TOKEN: ${{ github.token }}
@@ -147,16 +152,16 @@ jobs:
           test -n "$GH_TOKEN" || { echo "::error::RELEASES_PAT is required for the updater bridge"; exit 1; }
           title=$(cat "$RUNNER_TEMP/release-title.txt")
           state=missing
-          if gh release view "$TAG" --repo milind-soni/openmausbot-releases > /dev/null 2>&1; then
-            state=$(gh release view "$TAG" --repo milind-soni/openmausbot-releases --json isDraft --jq .isDraft)
+          if gh release view "$TAG" --repo "$LEGACY_RELEASES_REPO" > /dev/null 2>&1; then
+            state=$(gh release view "$TAG" --repo "$LEGACY_RELEASES_REPO" --json isDraft --jq .isDraft)
           else
-            gh release create "$TAG" --repo milind-soni/openmausbot-releases \
+            gh release create "$TAG" --repo "$LEGACY_RELEASES_REPO" \
               --draft --title "$title" --notes-file "$RUNNER_TEMP/release-notes.md"
             state=true
           fi
           if [ "$state" != false ]; then
             for file in assets/*; do
-              gh release upload "$TAG" "$file" --repo milind-soni/openmausbot-releases --clobber
+              gh release upload "$TAG" "$file" --repo "$LEGACY_RELEASES_REPO" --clobber
             done
           fi
           # Published bytes are immutable. Draft uploads and already-published
@@ -173,7 +178,7 @@ jobs:
           // The npm job may attach this optional asset between our download
           // and comparison. It is canonical-only, never an updater artifact.
           canonical.delete(`openmausbot-${tag.slice(1)}.tgz`);
-          const legacy = assets("milind-soni/openmausbot-releases", process.env.LEGACY_TOKEN);
+          const legacy = assets(process.env.LEGACY_RELEASES_REPO, process.env.LEGACY_TOKEN);
           if (canonical.size !== legacy.size) throw new Error(`legacy mirror has ${legacy.size} assets; canonical has ${canonical.size}`);
           for (const [name, digest] of canonical) {
             if (legacy.get(name) !== digest) throw new Error(`legacy mirror differs for ${name}`);
@@ -182,12 +187,12 @@ jobs:
           EOF
           # Keep recovery reruns idempotent: published bytes stay immutable,
           # while the legacy title and notes follow the canonical release.
-          gh release edit "$TAG" --repo milind-soni/openmausbot-releases \
+          gh release edit "$TAG" --repo "$LEGACY_RELEASES_REPO" \
             --title "$title" --notes-file "$RUNNER_TEMP/release-notes.md"
           if [ "$state" != false ]; then
-            gh release edit "$TAG" --repo milind-soni/openmausbot-releases --draft=false --latest
+            gh release edit "$TAG" --repo "$LEGACY_RELEASES_REPO" --draft=false --latest
           fi
-          gh release view "$TAG" --repo milind-soni/openmausbot-releases \
+          gh release view "$TAG" --repo "$LEGACY_RELEASES_REPO" \
             --json isDraft --jq .isDraft | grep -q false
 
       - name: Refresh the Vercel docs

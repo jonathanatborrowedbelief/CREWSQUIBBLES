@@ -22,6 +22,7 @@ import { CloudSetupSteps } from "./CloudSetupSteps";
 import { useCloudSendNotice } from "./CloudSendStrip";
 import { OpenFilesButton } from "./OpenFilesButton";
 import { useDesktopCapabilities } from "./DesktopCapabilities";
+import { accountsBridge, cloudAccountBridge, cloudPlanBridge, cloudSendBridge } from "@/lib/upstream-hidden";
 
 export { cloudPlanLabel };
 
@@ -184,7 +185,7 @@ export function CloudAccountSettings({ linkRequest = 0, cloudHome = false, teamH
   /** a row for the Plan card (Simple's What this place cost) */
   extra?: ReactNode;
 } = {}) {
-  const bridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+  const bridge = window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
   const { platform } = useDesktopCapabilities().capabilities.host;
   const [account, setAccount] = useState<CloudAccountState | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState(false), [confirm, setConfirm] = useState<false | "sign-out" | "other-email">(false);
@@ -238,13 +239,13 @@ export function CloudAccountSettings({ linkRequest = 0, cloudHome = false, teamH
     if (action === "sign-in") void perform(() => bridge.begin());
     if (action === "connect") { link.current.connected = true; connectHome(); }
   }, [bridge, linkRequest, account, busy]);
-  const [moveNotice] = useCloudSendNotice(bridge ? window.ogb?.cloudSendPage : undefined);
+  const [moveNotice] = useCloudSendNotice(bridge ? cloudSendBridge() : undefined);
   const move = moveNotice?.move ? moveLine(moveNotice.move, "local") : null;
   const moving = move && move.kind !== "done" ? move.text : null;
   const offer = useCloudOffer(Boolean(account) && buyOfferAllowed(cloudPlanView(account)), account?.offer);
   const renewal: CloudRenewalActions | null = bridge?.cancelPlan && bridge.keepPlan ? { cancel: survey => bridge.cancelPlan!(survey), keep: () => bridge.keepPlan!() } : null;
   if (!bridge) {
-    const plan = window.ogb?.remoteClient?.active || !cloudHome ? undefined : window.ogb?.cloudPlan;
+    const plan = window.ogb?.remoteClient?.active || !cloudHome ? undefined : cloudPlanBridge();
     if (part !== "plan") return null;
     return cloudHome && teamHome ? null
       : plan ? <CloudPlanOnCloud bridge={plan} usage={usage} upgrade={upgrade} extra={extra} /> : <p className="px-4 text-[13px] text-ink-secondary">{t("cloudAccount.desktopOnly")}</p>;
@@ -287,8 +288,8 @@ export function CloudAccountSettings({ linkRequest = 0, cloudHome = false, teamH
             <button type="button" disabled={busy} data-danger="" className="settings-quiet cursor-pointer" onClick={() => setConfirm("sign-out")}>{t("settings.account.signOutShort")}</button>
           </SettingRow></div>}
         </SettingsRows>
-        {signed && view.kind === "free" && !confirm && <p className="px-4 text-[12px] leading-4 text-ink-secondary">{t(window.ogb?.accounts ? "cloudAccount.otherEmailOrTeam" : "cloudAccount.otherEmail")}{" "}
-          <button type="button" data-cloud-other-email disabled={busy} className="cursor-pointer text-accent-text hover:underline" onClick={() => (window.ogb?.accounts ? setAddingEmail(true) : setConfirm("other-email"))}>{t(window.ogb?.accounts ? "cloudAccount.addOtherEmail" : "cloudAccount.useOtherEmail")}</button></p>}
+        {signed && view.kind === "free" && !confirm && <p className="px-4 text-[12px] leading-4 text-ink-secondary">{t(accountsBridge() ? "cloudAccount.otherEmailOrTeam" : "cloudAccount.otherEmail")}{" "}
+          <button type="button" data-cloud-other-email disabled={busy} className="cursor-pointer text-accent-text hover:underline" onClick={() => (accountsBridge() ? setAddingEmail(true) : setConfirm("other-email"))}>{t(accountsBridge() ? "cloudAccount.addOtherEmail" : "cloudAccount.useOtherEmail")}</button></p>}
         {errorLine}
       </SettingsGroup>
       {addingEmail && <AccountsSheet adding="" onClose={() => setAddingEmail(false)} />}

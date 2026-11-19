@@ -6,6 +6,7 @@ import type { CompanionAccountState } from "../types/ogb";
 import { companionPairingRoute, type CompanionPairingRouteSource } from "./companion-pairing";
 import type { CompanionState } from "./companion-types";
 import { t } from "./i18n";
+import { managedRemoteHidden } from "./upstream-hidden";
 
 export type RemoteAccessStepId = "computer" | "account" | "relay" | "route";
 export type RemoteAccessStepResult = "ok" | "failed" | "unchecked";
@@ -167,7 +168,7 @@ function factsOf(facts: RemoteAccessFacts): Array<[string, string]> {
     if (value) out.push([key, value]);
   };
   add("app", typeof facts.appVersion === "string" && VERSION.test(facts.appVersion) ? facts.appVersion : null);
-  if (account) {
+  if (account && !managedRemoteHidden()) {
     const status = known(account.status, new Set(["signed-out", "connecting", "ready", "error"])) ?? "unknown";
     const problem = known(account.problem, ACCOUNT_PROBLEMS);
     add("account", `${account.available ? status : "unavailable"}${problem ? ` (${problem})` : ""}`);
@@ -180,11 +181,11 @@ function factsOf(facts: RemoteAccessFacts): Array<[string, string]> {
     const relay = companion.e2e?.relay;
     const node = companion.e2e?.node?.match(RELAY_NODE)?.[1] ?? null;
     const problem = known(companion.e2e?.relayProblem, RELAY_PROBLEMS);
-    if (relay === "connected" || relay === "connecting" || relay === "off") add("relay", `${relay}${node ? ` ${node}` : ""}${problem ? ` (${problem})` : ""}`);
+    if (!managedRemoteHidden() && (relay === "connected" || relay === "connecting" || relay === "off")) add("relay", `${relay}${node ? ` ${node}` : ""}${problem ? ` (${problem})` : ""}`);
     const token = companion.relayToken;
     const tokenState = known(token?.state, new Set(["off", "fetching", "ready", "failed", "waiting"]));
     const tokenCode = known(token?.code, TOKEN_CODES);
-    if (tokenState) add("relay_access", `${tokenState}${tokenCode ? ` (${tokenCode})` : ""}`);
+    if (tokenState && !managedRemoteHidden()) add("relay_access", `${tokenState}${tokenCode ? ` (${tokenCode})` : ""}`);
     add("paired", String(Array.isArray(companion.devices) ? Math.min(companion.devices.length, 100) : 0));
   }
   if (facts.setupTimedOut) add("setup", "timed_out");
@@ -203,8 +204,9 @@ export function diagnoseRemoteAccess(facts: RemoteAccessFacts): RemoteAccessDiag
     ["relay", t("remote.diagnosis.step.relay"), relay],
     ["route", t("remote.diagnosis.step.route"), route],
   ];
-  const steps = evaluated.map(([id, label, step]): RemoteAccessStep => ({ id, label, result: step.result, reason: step.reason }));
-  const first = evaluated.find(([, , step]) => step.result === "failed")?.[2];
+  const listed = managedRemoteHidden() ? evaluated.filter(([id]) => id !== "account" && id !== "relay") : evaluated;
+  const steps = listed.map(([id, label, step]): RemoteAccessStep => ({ id, label, result: step.result, reason: step.reason }));
+  const first = listed.find(([, , step]) => step.result === "failed")?.[2];
   const waiting = steps.some((step) => step.result === "unchecked" && step.id !== "relay");
   return {
     headline: first?.reason ?? (route.result === "ok" ? route.reason : waiting ? t("remote.diagnosis.connecting") : t("remote.diagnosis.allClear")),

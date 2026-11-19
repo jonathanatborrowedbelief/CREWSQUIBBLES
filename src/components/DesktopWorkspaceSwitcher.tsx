@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n";
 import { railShown, usePlaces } from "@/lib/places";
 import { CloudTile } from "./cloud-buy/parts";
 import { SIMPLE_RAIL_BUTTON } from "./SidebarSimpleTop";
+import { cloudAccountBridge, cloudPlanBridge } from "@/lib/upstream-hidden";
 
 export function openServerMenu(bridge: { menu: (options?: { from?: "howto" }) => Promise<void> }, { howTo = false, onClosed }: { howTo?: boolean; onClosed?: () => void } = {}): Promise<void> {
   return bridge.menu(howTo ? { from: "howto" } : undefined).finally(() => { if (howTo) onClosed?.(); });
@@ -33,8 +34,8 @@ export function planSleeps(plan: CloudPlanSnapshot | null): boolean | null {
 /** On My Cloud's page in the app, whether its plan sleeps when idle (planSleeps; null while unknown, and always in a
  * browser); on this computer's page, whether opening My Cloud waits for it to wake. */
 export function useCloudPower(cloudHome: boolean): { sleeps: boolean | null; waking: boolean } {
-  const plan = cloudHome && !window.ogb?.remoteClient?.active ? window.ogb?.cloudPlan : undefined;
-  const account = cloudHome || window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+  const plan = cloudHome && !window.ogb?.remoteClient?.active ? cloudPlanBridge() : undefined;
+  const account = cloudHome || window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
   const [sleeps, setSleeps] = useState<boolean | null>(null);
   const [waking, setWaking] = useState(false);
   useEffect(() => {

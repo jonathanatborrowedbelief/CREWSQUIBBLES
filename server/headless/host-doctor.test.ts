@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { VerbContext } from "./context.ts";
-import { checkHost, hostDoctor, hostReport, listeningPorts, type CommandResult, type HostCheck, type HostProbe } from "./host-doctor.ts";
+import { checkHost, hostDoctor, hostReport, listeningPorts, systemProbe, type CommandResult, type HostCheck, type HostProbe } from "./host-doctor.ts";
 import type { HeadlessIo } from "./output.ts";
 import { runHeadless } from "./main.ts";
 
@@ -145,6 +145,31 @@ describe("doctor --host", () => {
     expect(byId(await checkHost(probe({ clockOffset: async () => null }), OPTIONS), "clock")!.status).toBe("ok");
     expect(byId(await checkHost(probe({ clockOffset: async () => null, commands: { timedatectl: { ok: true, stdout: "no\n" } } }), OPTIONS), "clock"))
       .toMatchObject({ status: "warn", fix: "sudo timedatectl set-ntp true" });
+  });
+
+  describe("the clock reference", () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    it("asks api.github.com for the time, and never an upstream host", async () => {
+      const asked: string[] = [];
+      vi.stubGlobal("fetch", async (url: string | URL | Request) => {
+        asked.push(String(url));
+        return new Response(null, { status: 200, headers: { date: new Date(Date.now() - 60_000).toUTCString() } });
+      });
+      const offset = await systemProbe().clockOffset();
+      expect(asked).toEqual(["https://api.github.com"]);
+      expect(asked.join(" ")).not.toMatch(/openmausbot\.com|milind/i);
+      // This clock is ahead of the stamped Date by about a minute.
+      expect(offset).toBeGreaterThan(55_000);
+      expect(offset).toBeLessThan(65_000);
+    });
+
+    it("answers null when the reference sends no usable Date", async () => {
+      vi.stubGlobal("fetch", async () => new Response(null, { status: 200 }));
+      expect(await systemProbe().clockOffset()).toBeNull();
+      vi.stubGlobal("fetch", async () => { throw new Error("offline"); });
+      expect(await systemProbe().clockOffset()).toBeNull();
+    });
   });
 
   it("finds Podman when Docker is missing", async () => {

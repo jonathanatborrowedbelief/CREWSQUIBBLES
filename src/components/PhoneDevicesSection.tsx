@@ -29,6 +29,7 @@ import { DialogTitle } from "./settings/SettingsDialog";
 export { DialogTitle };
 import { productName } from "../lib/brand";
 import { useStore } from "@/state/store";
+import { managedRemoteHidden } from "@/lib/upstream-hidden";
 
 export {
   companionAccountActionError,
@@ -75,6 +76,7 @@ export function deriveTailscalePairingStatus(
 /** The control plane gives a build with the encrypted connection no free web address (`relay_capable`): there the row
  * shows only while the route is on or the account still holds an address. `renewPairing` is what such a build's bridge adds. */
 export function showHttpsAddressRow(state: Pick<CompanionState, "routes">, account: Pick<CompanionAccountState, "endpoint"> | null, bridge: Pick<CompanionBridge, "renewPairing"> | null): boolean {
+  if (managedRemoteHidden()) return false;
   return state.routes?.https?.on === true || Boolean(account?.endpoint) || typeof bridge?.renewPairing !== "function";
 }
 
@@ -92,7 +94,8 @@ const NOTICE_KEY = {
 } as const;
 
 /** The update's one-time notes: each route it kept on, with Turn off beside OK. */
-export function RouteNotices({ c, notices }: { c: PhoneSetupController; notices: CompanionRoute[] }) {
+export function RouteNotices({ c, notices: all }: { c: PhoneSetupController; notices: CompanionRoute[] }) {
+  const notices = managedRemoteHidden() ? all.filter((route) => route !== "relay" && route !== "https") : all;
   if (notices.length === 0) return null;
   return (
     <div className="flex flex-col gap-2" data-route-notices="">
@@ -266,7 +269,7 @@ export function PairDeviceDialog({ c, state, onClose, secureAddress = false, pla
   secureAddress?: boolean;
 }) {
   const signedIn = c.account?.status === "ready";
-  const relayAvailable = c.account?.available !== false;
+  const relayAvailable = c.account?.available !== false && !managedRemoteHidden();
   const [picked, setPicked] = useState<PairRoute>(signedIn && relayAvailable ? "relay" : "wifi");
   const anyOn = (["wifi", "relay"] as const).some((route) => state.routes?.[route]?.on) || state.routes?.tailscale?.on === true;
   const [step, setStep] = useState<PairStep>(anyOn || secureAddress ? "pairing" : "consent");
@@ -483,7 +486,7 @@ export function PhoneDevicesSection({ profileEmail = "", focusRequest = 0, simpl
         <SettingsGroup label={t("phone.reach.title")} block="reach">
           <SettingsRows>
             <RouteRow c={c} state={state} route="wifi" blocked={managedBy} />
-            <RouteRow c={c} state={state} route="relay" blocked={managedBy} onSignIn={() => setPairing("device")} />
+            {!managedRemoteHidden() && <RouteRow c={c} state={state} route="relay" blocked={managedBy} onSignIn={() => setPairing("device")} />}
             <SettingRow title={t("remote.keepAwake")} subtitle={t("phone.reach.awakeLine")} inert={!anyRoute ? t("remote.keepAwakeNeedsRoute") : undefined}>
               <Switch checked={state.keepAwake} aria-label={t("remote.keepAwakeAria")} disabled={c.busy || !anyRoute}
                 onClick={() => void c.act((companion) => companion.keepAwake(!state.keepAwake))} />

@@ -51,6 +51,8 @@ const ph = vi.hoisted(() => {
   return ph;
 });
 vi.mock("posthog-js", () => ph.module());
+// CREW ships no PostHog key; these tests exercise the code path a build WITH a key takes (VITE_CREW_POSTHOG_KEY).
+vi.stubEnv("VITE_CREW_POSTHOG_KEY", "phc_crew_test_key_not_a_real_project");
 
 // The suite runs on the node environment, which has no localStorage.
 const store = new Map<string, string>();
@@ -491,5 +493,45 @@ describe("app_active", () => {
     vi.setSystemTime(new Date(2026, 9, 24, 8, 0));
     page.fire("focus");
     expect(active()).toHaveLength(2);
+  });
+});
+
+describe("with no PostHog key (CREW's default build)", () => {
+  const TEST_KEY = "phc_crew_test_key_not_a_real_project";
+  beforeEach(() => void vi.stubEnv("VITE_CREW_POSTHOG_KEY", ""));
+  afterEach(() => void vi.stubEnv("VITE_CREW_POSTHOG_KEY", TEST_KEY));
+
+  it("is unavailable and off, even for a fresh install and even after the Settings switch is turned on", async () => {
+    const fresh = await freshAnalytics();
+    expect(fresh.analyticsKey()).toBe("");
+    expect(fresh.analyticsAvailable()).toBe(false);
+    expect(fresh.analyticsEnabled()).toBe(false);
+    fresh.setAnalyticsEnabled(true);
+    expect(fresh.analyticsEnabled()).toBe(false);
+    // Nothing is stored either: a stored "on" must not turn into a send the day a key is supplied.
+    expect(store.size).toBe(0);
+  });
+
+  it("never loads posthog-js, never inits, never queues or captures, and never writes the install marker", async () => {
+    const fresh = await freshAnalytics();
+    await fresh.initAnalytics();
+    fresh.track("app_snapshot", { bots: 3 });
+    fresh.setAnalyticsEnabled(true);
+    await fresh.initAnalytics();
+    fresh.track("after_switch_on");
+    expect(ph.loads).toBe(0);
+    expect(ph.calls).toEqual([]);
+    expect(store.size).toBe(0);
+  });
+
+  it("negative control: the same calls with a key do load, init and capture", async () => {
+    vi.stubEnv("VITE_CREW_POSTHOG_KEY", TEST_KEY);
+    const fresh = await freshAnalytics();
+    expect(fresh.analyticsAvailable()).toBe(true);
+    await fresh.initAnalytics();
+    fresh.track("app_snapshot", { bots: 3 });
+    expect(ph.loads).toBe(1);
+    expect(ph.calls).toContain("init");
+    expect(ph.calls).toContain("capture app_snapshot");
   });
 });

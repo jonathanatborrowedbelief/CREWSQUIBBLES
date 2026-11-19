@@ -95,7 +95,7 @@ export function OrganisationRow({
         </button>
       </>
     );
-    action = (
+    action = !DEFAULT_ADMIN_ORIGIN ? null : (
       <button
         type="button"
         disabled={busy}

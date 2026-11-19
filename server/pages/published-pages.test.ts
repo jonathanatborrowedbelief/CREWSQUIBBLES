@@ -53,11 +53,11 @@ function setup(options: { home?: boolean; quota?: number; selfHosted?: boolean; 
 }
 
 describe("publishing a page", () => {
-  it("asks the person to sign in to MausBot when this app has no account, and publishes nothing", async () => {
+  it("says publishing isn't available when this app has no CREW account, and publishes nothing", async () => {
     const f = setup();
     writeSite(join(f.work, "site"));
     const outcome = await f.publish({ path: "site" });
-    expect(outcome).toEqual({ status: 403, text: "Publishing a page needs a CREW account. Sign in to CREW in the app's Settings, then ask again." });
+    expect(outcome).toEqual({ status: 403, text: "Publishing pages isn't available in CREW yet." });
     expect(f.service.minted).toEqual([]);
     expect(f.cards).toEqual([]);
   });
@@ -80,7 +80,7 @@ describe("publishing a page", () => {
     expect(f.service.minted).toEqual([]);
     expect(f.cards).toEqual([]);
     applyIncludedPagesMessage({ type: "openmausbot:included-pages", access: null });
-    expect((await f.publish({ path: "site" })).text).toMatch(/^Publishing a page needs a CREW account/u);
+    expect((await f.publish({ path: "site" })).text).toBe("Publishing pages isn't available in CREW yet.");
   });
 
   it("publishes a folder to a new link with a card showing the link and the usage, and remembers it", async () => {

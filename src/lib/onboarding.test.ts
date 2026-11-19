@@ -27,6 +27,7 @@ import {
   markWelcomeFinished,
   welcomeFinishedThisLaunch,
 } from "./onboarding";
+import { setUpstreamHidden } from "./upstream-hidden";
 
 const done = { completedAt: "2026-09-09T10:00:00.000Z", version: WELCOME_VERSION, reelSeen: false, hintsSeen: [] };
 
@@ -140,6 +141,12 @@ describe("organisation sign-in in the engines beat", () => {
     expect(organisationSignIn({ organization: bridge, remoteClient: { active: true } }, { hosted: false })).toBeUndefined();
     expect(organisationSignIn({ organization: bridge }, { hosted: true })).toBeUndefined();
     expect(organisationSignIn({ organization: bridge, remoteClient: { active: false } }, { hosted: false })).toBe(bridge);
+  });
+
+  it("is not offered while upstream's Admin portal is hidden (CREW)", () => {
+    setUpstreamHidden(true);
+    try { expect(organisationSignIn({ organization: bridge }, { hosted: false })).toBeUndefined(); } finally { setUpstreamHidden(false); }
+    expect(organisationSignIn({ organization: bridge }, { hosted: false }), "control: the switch off").toBe(bridge);
   });
 
   it("counts the models the organisation approved", () => {

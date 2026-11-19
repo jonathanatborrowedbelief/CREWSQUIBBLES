@@ -25,6 +25,8 @@ vi.mock("react", async (original) => ({ ...await original<typeof import("react")
   },
   useEffect: (effect: EffectCallback) => { fixture.effects.push(effect); },
 }));
+// CREW has no Admin portal of its own yet (the default is empty); the default sign-in button is tested against a fixture portal.
+vi.mock("@/lib/onboarding", async (original) => ({ ...await original<typeof import("@/lib/onboarding")>(), DEFAULT_ADMIN_ORIGIN: "https://admin.example.test" }));
 // The connected panel reads bots and engines for its Company models section.
 vi.mock("@/state/store", async (original) => ({ ...await original<typeof import("@/state/store")>(),
   useStore: () => ({ state: { bots: fixture.store.bots, instances: fixture.store.instances }, dispatch: fixture.store.dispatch, flushBotPatches: fixture.store.flushBotPatches }),
@@ -113,7 +115,7 @@ describe("optional desktop Organisation settings", () => {
     expect(bridge.begin).not.toHaveBeenCalled();
     const signIn = () => view.nodes.find(node => node.type === "button" && (node.props as { "data-organization-sign-in"?: string })["data-organization-sign-in"] === "")!.props.onClick!();
     signIn(); signIn(); await flush();
-    expect(bridge.begin).toHaveBeenCalledExactlyOnceWith({ portalOrigin: "https://admin.openmausbot.com" });
+    expect(bridge.begin).toHaveBeenCalledExactlyOnceWith({ portalOrigin: "https://admin.example.test" });
     expect(fetch).not.toHaveBeenCalled();
     const progress = render().html;
     expect(progress).toContain("Finish signing in through your browser");

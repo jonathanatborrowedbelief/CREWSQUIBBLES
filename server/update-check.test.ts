@@ -4,10 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 import { createUpdateChecker, installKind, isNewerVersion, LATEST_RELEASE_URL, STABLE_CHANNEL_URL, updateChannel } from "./update-check.ts";
 
 const release = (tag: string) =>
-  ({ ok: true, status: 200, json: async () => ({ tag_name: tag, html_url: `https://github.com/milind-soni/OpenMausBot/releases/tag/${tag}` }) }) as Response;
+  ({ ok: true, status: 200, json: async () => ({ tag_name: tag, html_url: `https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/releases/tag/${tag}` }) }) as Response;
 
 const promoted = (version: string) =>
-  ({ ok: true, status: 200, json: async () => ({ channel: "stable", version, image: `ghcr.io/milind-soni/openmausbot@sha256:${"a".repeat(64)}`, releaseUrl: `https://github.com/milind-soni/OpenMausBot/releases/tag/v${version}` }) }) as Response;
+  ({ ok: true, status: 200, json: async () => ({ channel: "stable", version, image: `ghcr.io/milind-soni/openmausbot@sha256:${"a".repeat(64)}`, releaseUrl: `https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/releases/tag/v${version}` }) }) as Response;
 const missing = { ok: false, status: 404, json: async () => ({}) } as Response;
 /** GitHub's newest release is `newest`; the stable channel names `stable`, or does not exist yet. */
 const github = (newest: string, stable: string | null) => vi.fn(async (url: string | URL | Request) =>
@@ -54,7 +54,7 @@ describe("server update check", () => {
       channel: "stable",
       latest: "0.1.93",
       available: true,
-      releaseUrl: "https://github.com/milind-soni/OpenMausBot/releases/tag/v0.1.93",
+      releaseUrl: "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/releases/tag/v0.1.93",
       command: "git pull && ./update.sh",
       restart: false,
     });
@@ -104,6 +104,23 @@ describe("server update check", () => {
     expect(fetch.mock.calls.map(([url]) => String(url))).not.toContain(LATEST_RELEASE_URL);
     now = 25 * 60 * 60_000;
     await expect(check()).rejects.toThrow("The stable channel answered 503");
+  });
+
+  it("reads only our own fork's channel and releases, never upstream's", () => {
+    expect(LATEST_RELEASE_URL).toBe("https://api.github.com/repos/jonathanatborrowedbelief/CREWSQUIBBLES/releases/latest");
+    expect(STABLE_CHANNEL_URL).toBe("https://raw.githubusercontent.com/jonathanatborrowedbelief/CREWSQUIBBLES/channels/stable.json");
+  });
+
+  it("says there is no update, not an error, while the fork has published no release", async () => {
+    const fetch = vi.fn(async (_url: string | URL | Request) => missing);
+    const check = createUpdateChecker({ current: "0.1.92", install: "docker", fetch });
+    expect(await check()).toEqual({ current: "0.1.92", install: "docker", channel: "newest", available: false, command: "git pull && ./update.sh", restart: false });
+    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([STABLE_CHANNEL_URL, LATEST_RELEASE_URL]);
+    await check();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    // A 404 is only "no release yet": any other answer from the newest-release lookup is still an error.
+    const failing = vi.fn(async (url: string | URL | Request) => (String(url) === STABLE_CHANNEL_URL ? missing : ({ ok: false, status: 500, json: async () => ({}) }) as Response));
+    await expect(createUpdateChecker({ current: "0.1.92", install: "docker", fetch: failing })()).rejects.toThrow("GitHub answered 500");
   });
 
   it("says up to date, and asks at most once an hour", async () => {

@@ -1,15 +1,21 @@
 # Announcements: cards without a release
 
 The app can show a card in its corner (a sponsor's offer, product news, a tip) that nobody shipped in a release. The cards
-live in one file in this repository, [`announcements/announcements.json`](../announcements/announcements.json). Merge a
-change to it on `main` and every install that runs this version or later picks it up within about an hour.
+live in one file in this repository, [`announcements/announcements.json`](../announcements/announcements.json).
+
+**Announcements are off by default.** Nothing is downloaded and no card shows until the server's environment has
+`OMB_DISABLE_ANNOUNCEMENTS=0` (see [Turning it on](#turning-it-on)). CREW's own app also hides every promotional card in
+its page (`HIDE_UPSTREAM` in `electron/upstream-hidden.mjs`), so there the page never asks the server for them. Once both are
+on, a change merged to the file on the feed's branch reaches every install that runs this version or later within about
+an hour.
 
 ## How it works
 
-- **One file on `main`.** The app's server downloads
-  `https://raw.githubusercontent.com/milind-soni/OpenMausBot/main/announcements/announcements.json` when a page of the app
-  asks for the cards: at launch, then about hourly while the app is in use. Whoever can merge to `main` can publish a card;
-  there is no other sign-in and no backend.
+- **One file in our fork.** With announcements switched on, the app's server downloads
+  `https://raw.githubusercontent.com/jonathanatborrowedbelief/CREWSQUIBBLES/rebrand/announcements/announcements.json`
+  (`ANNOUNCEMENTS_URL` in `shared/announcements.ts`; the `rebrand` branch for now, so change that constant if the feed moves to
+  `main`) when a page of the app asks for the cards: at launch, then about hourly while the app is in use. Whoever can merge
+  to that branch can publish a card; there is no other sign-in and no backend. The app never reads upstream's file.
 - **The server fetches, the page decides.** The desktop app's own server, a MausBot Cloud and a self-hosted server all
   download the file the same way (`server/announcements/feed.ts`) and hand the cards to their pages at
   `GET /api/announcements`. Each page then decides, from what it already knows, whether a card is for the person looking
@@ -25,7 +31,7 @@ change to it on `main` and every install that runs this version or later picks i
 
 ### What the app sends
 
-One plain GET of that public file, from the server: no cookie, no account, no install id, no version, no query string.
+Nothing, while announcements are off (the default). Switched on, it is one plain GET of that public file, from the server: no cookie, no account, no install id, no version, no query string.
 GitHub sees the server's IP address, as for any download. When a card has a picture, the person's browser loads it from
 the same place, with no cookie and no referrer. Clicking a card's link opens its address exactly as the file has it,
 in the system browser on the desktop (a new tab with no opener or referrer in a browser), with nothing added. With
@@ -41,10 +47,11 @@ Older versions of the app know nothing of this file and never download it.
 2. Check it: `node scripts/check-announcements.mjs` (add `--against origin/main` to also check `updatedAt` moved
    forward). CI runs the same check on every pull request and fails on any problem, so a bad edit cannot merge.
 3. For a picture, add the file under `announcements/` (for example `announcements/images/phone-app.png`, PNG, JPEG or
-   WebP, at most 200 KB, about 600 × 240 pixels) and point `image.url` at its raw address on `main`. It must be merged
-   for the picture to load, so merge it with the card or before.
-4. Open a pull request and merge it. Installs show the card within about an hour (GitHub's raw cache adds up to five
-   minutes), each person once.
+   WebP, at most 200 KB, about 600 × 240 pixels) and point `image.url` at its raw address on the feed's branch
+   (`ANNOUNCEMENT_IMAGE_PREFIX` in `shared/announcements.ts`). It must be merged for the picture to load, so merge it with
+   the card or before.
+4. Open a pull request and merge it. Installs that have announcements on show the card within about an hour (GitHub's raw
+   cache adds up to five minutes), each person once.
 
 **To pull a card back:** delete it from the file (or set its `ends` to now), move `updatedAt` forward and merge. Within
 about an hour no install shows it: a page that has it on screen drops it the next time it asks for the cards. Never reuse a card's `id` for a different card: people who saw the old one would
@@ -201,26 +208,31 @@ with the cards). Give a card `starts` when its date matters.
   (`{ buttons }`: open a page, write an email, open Add a Cloud). Give an offer its `until` to show Ended after it. Its
   date newer than the person's last look is what raises the dot.
 
-## Turning it off
+## Turning it on
 
-- **`OMB_DISABLE_ANNOUNCEMENTS=1`** in the server's environment stops the download and every remote card on that server's
-  pages, the bundled ones included. For a self-hosted server or an open-source build that should never show them. The
-  desktop app's own server inherits the app's environment, so it holds there when the app is started with it set.
+- **Off is the default.** The server downloads nothing and hands its pages no card, the bundled ones included, unless
+  **`OMB_DISABLE_ANNOUNCEMENTS=0`** is in its environment (`server/announcements/feed.ts`). Any other value, or none, keeps
+  it off; the variable keeps its old name, but `1` is now the same as leaving it unset. The desktop app's own server
+  inherits the app's environment, so it takes effect there when the app is started with it set.
+- **CREW's page hides the cards too.** Even with the server on, CREW builds do not ask for them: `HIDE_UPSTREAM` in
+  `electron/upstream-hidden.mjs` is `true`. To show announcements in a build, turn both on, and point the feed at a file
+  you control first.
 - **No in-app switch governs these cards.** The app has no setting for promotional popups: the product-updates question is
   about email, and the usage-analytics switch only stops the counting. A person closes a card with Not now or the X, and
   never sees that card again.
 
 ## Counting
 
-With usage analytics on, and only then (the same switch as every other event), each card sends one `announcement` event
+With usage analytics on, and only then (the same switch as every other event; a build with no analytics key never sends
+one, and CREW ships without a key), each card sends one `announcement` event
 per step: `{ id, kind, action }`, `action` being `shown`, `primary`, `secondary` or `close` (the X, Escape or Not now).
 The `id` is the card's own id from this public file, the same for everyone. See [Usage analytics](analytics.md).
 
 ## Tests and previews
 
 Tests never download the live file: `server/testing/setup.ts` and the verification server
-(`scripts/control-omb.ts`, which the renderer previews and UI tests run on) set `OMB_DISABLE_ANNOUNCEMENTS=1`, so their
-pages get no cards whatever `main` holds. The server's tests hand the store a fake fetch.
+(`scripts/control-omb.ts`, which the renderer previews and UI tests run on) set `OMB_DISABLE_ANNOUNCEMENTS=1` (anything but
+`0` is off), so their pages get no cards whatever the feed holds. The server's tests hand the store a fake fetch.
 
 ## Moving the built-in sponsor card into the feed later
 

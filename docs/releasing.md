@@ -10,17 +10,22 @@ reruns and recovery. It
 builds macOS (arm64 + x64, signed, notarized, stapled), Windows, and Ubuntu
 from a single pinned commit, verifies every artifact the way a user would
 receive it, and assembles the canonical draft in
-[OpenMausBot releases](https://github.com/milind-soni/OpenMausBot/releases).
-The exact same assets are also staged in the public legacy releases repo so
-installed builds from 0.1.46 and earlier can update across the repository
-migration.
+[CREWSQUIBBLES releases](https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES/releases),
+the feed the app's updater reads (`electron-builder.yml`).
 
-Tick **publish** to publish and verify the canonical release first, then make
-the identical legacy updater bridge visible. Leave it unticked to review the
-canonical draft; when you publish that draft in GitHub's UI, the **Sync
-published release** workflow
-verifies and publishes its legacy mirror automatically. Never publish only the
-legacy draft.
+The legacy mirror (the same assets staged in a second releases repo, for installs
+that point at an older repository) is **off**. CREW has no such installs, so the
+repository variable `LEGACY_RELEASES_REPO` is unset, and every legacy step in
+**Release**, **Prepare next release** and **Sync published release** is skipped.
+To turn it on, set that variable to `owner/repo` and add the `RELEASES_PAT`
+secret (below); never point it at an upstream repository.
+
+Tick **publish** to publish and verify the canonical release. With a legacy
+mirror configured, the identical updater bridge is made visible after it. Leave
+**publish** unticked to review the canonical draft; when you publish that draft
+in GitHub's UI, the **Sync published release** workflow verifies and publishes
+the legacy mirror automatically, if there is one. Never publish only the legacy
+draft.
 
 The release commit must have passed CI on every platform: the **CI passed on
 the release commit** job waits (while the platforms build) for a ci.yml run
@@ -42,7 +47,9 @@ name, updater feed, blockmap, size, or digest is absent or inconsistent.
 
 GitHub generates the release body from pull requests since the previous
 canonical tag. The docs changelog combines published canonical releases with
-the legacy archive into one complete history and caches it for five minutes.
+the legacy archive into one complete history and caches it for five minutes. It
+still reads upstream's two repositories (`apps/docs/components/release-changelog.tsx`),
+so it shows none of our releases until that list points at CREWSQUIBBLES.
 Configure the optional Vercel hook below to rebuild the docs immediately after
 publication; otherwise the live cache or the next normal docs deployment
 refreshes it.
@@ -74,8 +81,9 @@ The workflow builds nothing. It:
    and reads its digest and the Cloud home image's;
 3. refuses to move stable back to an older version unless `allow_older` is
    ticked;
-4. moves the `stable` tag of `ghcr.io/milind-soni/openmausbot` and of
-   `ghcr.io/milind-soni/openmausbot-cloud-home` to those digests;
+4. moves the `stable` tag of `ghcr.io/jonathanatborrowedbelief/crewsquibbles` and of
+   `ghcr.io/jonathanatborrowedbelief/crewsquibbles-cloud-home` to those digests
+   (the workflow names them from the repository it runs in);
 5. commits `stable.json` (version, both images by digest, and every version
    that was stable in the last 90 days) to the `channels` branch. When that
    fails after the tags moved, the tags are put back to the digests the
@@ -87,9 +95,10 @@ it stops the run, so a network error never skips the move-back check or drops
 the history.
 
 Servers read
-`https://raw.githubusercontent.com/milind-soni/OpenMausBot/channels/stable.json`:
-the update check (`server/update-check.ts`) for the version, and
-`deploy/update.sh` for the image to pull. `latest` still follows `main` and is
+`https://raw.githubusercontent.com/jonathanatborrowedbelief/CREWSQUIBBLES/channels/stable.json`:
+the update check (`server/update-check.ts`) for the version. `deploy/update.sh`
+still reads upstream's record and image names, so a self-hosted server's script
+does not follow ours until it is pointed here. `latest` still follows `main` and is
 never moved by this workflow. Running it again with the same version changes
 nothing, and repairs a run that stopped between the tag and the record.
 Until a first version is promoted, both fall back to the newest release. The
@@ -124,16 +133,21 @@ to one side's steps belongs in the other too.
 
 ## Updater migration invariant
 
-`app-update.yml` is baked into every packaged desktop app. Builds through
-0.1.46 point to `milind-soni/openmausbot-releases`; newer builds point to
-`milind-soni/OpenMausBot`. For that reason:
+`app-update.yml` is baked into every packaged desktop app, so a build only ever
+updates from the repository it was built to read. CREW builds point to
+`jonathanatborrowedbelief/CREWSQUIBBLES` (`electron-builder.yml`), and the
+release gates check that. For that reason:
 
-1. Every new release is published byte-for-byte to both repositories during
-   the bridge period.
-2. `openmausbot-releases` must stay public. Do not delete its final bridge
-   release, feeds, or assets.
-3. README and docs downloads point at the canonical repo, while the legacy
-   mirror exists only for installed updater clients and historical releases.
+1. The feed repository must stay public: a private repository answers 404 to
+   every installed app, which then never sees an update.
+2. Do not rename or move it without a bridge release published to the old
+   address. If a second releases repository ever exists, set
+   `LEGACY_RELEASES_REPO` and every release is then published byte-for-byte to
+   both; that repository must stay public and keep its final bridge release,
+   feeds, and assets.
+3. README and docs downloads point at the canonical repo, while a legacy
+   mirror, if any, exists only for installed updater clients and historical
+   releases.
 
 The npm package is published separately and its versioned `.tgz` is attached
 only to the canonical release. It is not a desktop updater artifact; the
@@ -161,7 +175,7 @@ must fail the build, not ship an installer that downloads them on first use.
 
 ## One-time setup: release secrets
 
-Set these in **OpenMausBot → Settings → Secrets and variables → Actions**.
+Set these in **CREWSQUIBBLES → Settings → Secrets and variables → Actions**.
 
 The **Prepare next release** workflow also needs
 **Settings → Actions → General → Workflow permissions → Allow GitHub Actions
@@ -193,14 +207,15 @@ password for CI — revocable, scoped, no 2FA dance):
 base64 -i AuthKey_XXXXXXXX.p8 | pbcopy   # → APPLE_API_KEY_P8_BASE64
 ```
 
-### 3. `RELEASES_PAT`
+### 3. Optional `RELEASES_PAT`, only with a legacy mirror
 
-A fine-grained personal access token that lets the workflow write to the
-legacy updater mirror: **GitHub → Settings → Developer settings →
-Fine-grained tokens** → repository access: only `openmausbot-releases` →
-permissions: **Contents: Read and write**. Set a long expiry and a calendar
-reminder. The canonical release uses the workflow's scoped `GITHUB_TOKEN` and
-does not need a PAT.
+Needed only if you set the `LEGACY_RELEASES_REPO` variable. A fine-grained
+personal access token that lets the workflow write to the legacy updater
+mirror: **GitHub → Settings → Developer settings → Fine-grained tokens** →
+repository access: only that mirror repository → permissions:
+**Contents: Read and write**. Set a long expiry and a calendar reminder. The
+canonical release uses the workflow's scoped `GITHUB_TOKEN` and does not need
+a PAT; with no `LEGACY_RELEASES_REPO` this secret is never read.
 
 ### 4. Optional `DOCS_DEPLOY_HOOK_URL`
 
@@ -216,6 +231,6 @@ surgery: `pnpm package:mac`, gate with `codesign --verify --deep --strict`,
 notarize with the local keychain profile (`xcrun notarytool submit …
 --keychain-profile AC_PASSWORD`), staple, re-zip, regenerate blockmaps and
 `node scripts/regenerate-mac-feed.mjs`, upload the identical complete asset set
-to both repositories, publish and verify the canonical release before the
-legacy mirror, and always verify the published bytes against the published feed
-by downloading them back.
+to the canonical repository (and to the legacy mirror, if one is configured),
+publish and verify the canonical release before any legacy mirror, and always
+verify the published bytes against the published feed by downloading them back.

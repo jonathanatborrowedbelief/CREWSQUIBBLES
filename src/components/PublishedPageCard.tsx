@@ -8,6 +8,7 @@ import { usePageOpener } from "@/lib/page-open";
 import { t } from "@/lib/i18n";
 import { api, useStore, type Message } from "@/state/store";
 import { ASK_CHIP, ASK_CHIP_IDLE, ASK_PRIMARY_BUTTON } from "./AskCard";
+import { cloudAccountBridge } from "@/lib/upstream-hidden";
 
 const usageLine = (card: Card) => card.usage ? t("chat.page.usage", { pages: card.usage.pages, limit: card.usage.limit }) : null;
 
@@ -27,7 +28,7 @@ export function PublishedPageCard({ message }: { message: Message }) {
   const [failed, setFailed] = useState(false);
   const openPage = usePageOpener();
   if (!card) return null;
-  const bridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudAccount;
+  const bridge = window.ogb?.remoteClient?.active ? undefined : cloudAccountBridge();
   const unpublish = async () => {
     if (!card.pageId) return;
     setBusy(true);

@@ -8,6 +8,9 @@ import type { CloudRenewal } from "../../electron/cloud-list.mjs";
 import { setLocale } from "@/lib/i18n";
 
 vi.mock("./DesktopCapabilities", () => ({ useDesktopCapabilities: () => ({ capabilities: { host: { platform: "darwin" } }, ready: true }) }));
+// CREW has no booking page of its own yet (the default is empty); the cancel sheet is tested with a fixture one and without.
+const booking = vi.hoisted(() => ({ url: "https://cal.example.test/30min" }));
+vi.mock("@/lib/app-links", async original => ({ ...await original<typeof import("@/lib/app-links")>(), get CLOUD_CALL_URL() { return booking.url; } }));
 vi.mock("@/state/store", async original => ({ ...await original<typeof import("@/state/store")>(), useStore: () => ({ state: { bots: [], config: {} }, dispatch: vi.fn() }) }));
 import { CLOUD_CALL_URL, CloudCancelPlan, type CloudRenewalActions } from "./CloudCancelPlan";
 import { CloudAccountSettings, CloudPlanOnCloud } from "./CloudAccountSettings";
@@ -45,6 +48,17 @@ function actionsFor(results: Partial<{ cancel: CloudRenewalResult; keep: CloudRe
 }
 
 describe("the cancel sheet", () => {
+  it("leaves out the line that books a call while CREW has no booking page", async () => {
+    booking.url = "";
+    try {
+      await show(createElement(CloudCancelPlan, { renewal: trial, actions: actionsFor() }));
+      await click(button("Cancel trial"));
+      expect(sheet()!.querySelector("legend")?.textContent).toBe("Before you go: what's the main reason?");
+      expect(text()).not.toContain("Rather talk it through?");
+      expect(sheet()!.querySelector("a[target='_blank']")).toBeNull();
+    } finally { booking.url = "https://cal.example.test/30min"; }
+  });
+
   it("Cancel trial opens a calm sheet; the reason and both boxes go to main, then when it ends, that nothing is charged, how long its files stay, and Keep my plan", async () => {
     const actions = actionsFor(), changed = vi.fn();
     await show(createElement(CloudCancelPlan, { renewal: trial, actions, onChanged: changed }));

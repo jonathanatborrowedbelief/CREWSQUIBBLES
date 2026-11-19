@@ -10,6 +10,7 @@ import { codeDigits, SignInScreen } from "./cloud-buy/SignInScreen";
 import { Layer } from "./Layer";
 import { useModalDialog } from "../hooks/use-modal-dialog";
 import type { SidebarMenuItem } from "./SidebarPopoverMenu";
+import { accountSheetBridge, accountsBridge } from "@/lib/upstream-hidden";
 
 export interface AccountsAccess {
   /** This app's own page: who is signed in. Any other page has none. */
@@ -34,8 +35,8 @@ export function switchNote(result: Pick<RailOpenResult | AccountSwitchResult, "o
 
 /** Who is signed in on this device, on this app's own page; on any other page, only whether main offers the sheet. */
 export function useAccounts(): AccountsAccess & { sheet: { email: string | null; note: string | null } | null; closeSheet(): void } {
-  const bridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.accounts;
-  const remote = window.ogb?.accountSheet;
+  const bridge = window.ogb?.remoteClient?.active ? undefined : accountsBridge();
+  const remote = accountSheetBridge();
   const own = window.ogb?.app?.ownPage === true && Boolean(bridge);
   const places = usePlaces();
   const [view, setView] = useState<AccountsView | null>(null);
@@ -90,7 +91,7 @@ const EMAIL_STEP: CloudSignInPhase = { step: "email", intent: false, problem: nu
 /** Add another account in place: the emailed code, or the browser for single sign-on and two-step. The account in use goes
  * on until this succeeds; the code's attempt and the token stay in main. */
 function AddAccount({ start, onDone, onBack }: { start: string; onDone: (note: string | null) => void; onBack: () => void }) {
-  const bridge = window.ogb?.accounts;
+  const bridge = accountsBridge();
   const [phase, setPhase] = useState<CloudSignInPhase>(EMAIL_STEP);
   const [email, setEmail] = useState(start);
   const [code, setCode] = useState("");
@@ -145,7 +146,7 @@ function AddAccount({ start, onDone, onBack }: { start: string; onDone: (note: s
 /** Over any place's page, on the rail's own page, or over this computer's: who is signed in here and Sign out, or a plain line
  * (`note`). `adding`: the sign-in, for this address when it has one: Add another account, or a saved account whose sign-in ended. */
 export function AccountsSheet({ onClose, adding = null, note: given = null }: { onClose: () => void; adding?: string | null; note?: string | null }) {
-  const bridge = window.ogb?.accounts;
+  const bridge = accountsBridge();
   const [view, setView] = useState<AccountsView | null>(null);
   const [note, setNote] = useState<string | null>(given);
   const [add, setAdd] = useState<string | null>(adding);
@@ -183,7 +184,7 @@ export function AccountsSheet({ onClose, adding = null, note: given = null }: { 
 
 /** The sheet as the rail's page keeps it: asked for by main, from the person's click on the page beside the rail. */
 export function useAccountsSheet(): { open: boolean; close: () => void } {
-  const bridge = window.ogb?.accounts;
+  const bridge = accountsBridge();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!bridge) return;

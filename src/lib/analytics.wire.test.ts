@@ -4,7 +4,9 @@
 import { gunzipSync } from "node:zlib";
 import { expect, it, vi } from "vitest";
 
-const TOKEN = "phc_m2hP39w8y2gLPvHgDvSXAu6xcZ3agjf4ruL56rGcMZEe";
+// CREW ships no PostHog key: this is a made-up one, supplied the way a build would (VITE_CREW_POSTHOG_KEY).
+const TOKEN = "phc_crew_test_key_not_a_real_project";
+vi.stubEnv("VITE_CREW_POSTHOG_KEY", TOKEN);
 const STORED = `ph_${TOKEN}_posthog`;
 const FIRST_PAGE = "https://first-tenant.mausbot.cloud/rooms/FIRST-ROOM?share-computer=FIRST-COMPUTER&utm_source=first-campaign";
 const REFERRER = "https://referrer.example/search?q=SECRET-REFERRER";
@@ -98,6 +100,25 @@ async function minutes(count: number) {
     await new Promise((resolve) => setImmediate(resolve));
   }
 }
+
+it("with no key (CREW's default) puts nothing on the network, even after the switch is turned on and the clock runs 11 minutes", async () => {
+  vi.stubEnv("VITE_CREW_POSTHOG_KEY", "");
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval"] });
+  try {
+    const analytics = await import("./analytics");
+    await analytics.initAnalytics();
+    analytics.setAnalyticsEnabled(true);
+    await analytics.initAnalytics();
+    analytics.track("app_snapshot", { bots: 3 });
+    await minutes(11);
+    for (let turn = 0; turn < 5; turn++) await new Promise((resolve) => setImmediate(resolve));
+    expect(sent).toEqual([]);
+    expect(document.querySelectorAll("script")).toHaveLength(0);
+  } finally {
+    vi.useRealTimers();
+    vi.stubEnv("VITE_CREW_POSTHOG_KEY", TOKEN);
+  }
+});
 
 it("sends events without any stored or current address, polls nothing, and sends nothing once switched off", async () => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval"] });

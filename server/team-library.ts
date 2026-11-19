@@ -4,8 +4,8 @@ import { PACKAGE_V1_VERSION } from "../shared/package-format.ts";
 import { fetchGithubFolder } from "./share-github.ts";
 import { parseTeamManifest, type ParsedTeamManifest } from "./team-manifest.ts";
 
-export const TEAM_LIBRARY_REPOSITORY = "https://github.com/milind-soni/openmausbot-teams";
-export const TEAM_LIBRARY_RAW_ROOT = "https://raw.githubusercontent.com/milind-soni/openmausbot-teams/main";
+export const TEAM_LIBRARY_REPOSITORY = "https://github.com/jonathanatborrowedbelief/CREWSQUIBBLES";
+export const TEAM_LIBRARY_RAW_ROOT = "https://raw.githubusercontent.com/jonathanatborrowedbelief/CREWSQUIBBLES/main";
 export const TEAM_LIBRARY_CATALOG_URL = `${TEAM_LIBRARY_RAW_ROOT}/catalog.json`;
 
 const MAX_CATALOG_BYTES = 256_000;
@@ -158,7 +158,13 @@ async function fetchText(url: string, maxBytes: number, fetcher: Fetcher): Promi
 }
 
 export async function fetchTeamCatalog(fetcher: Fetcher = fetch): Promise<TeamCatalog> {
-  return parseTeamCatalog(await fetchJson(TEAM_LIBRARY_CATALOG_URL, MAX_CATALOG_BYTES, fetcher));
+  try {
+    return parseTeamCatalog(await fetchJson(TEAM_LIBRARY_CATALOG_URL, MAX_CATALOG_BYTES, fetcher));
+  } catch (error) {
+    // No catalog.json in the library repository yet: an empty library, not a failure. Any other status still throws.
+    if ((error as { status?: number }).status === 404) return parseTeamCatalog({ format: "openmaus.catalog", version: 1, teams: [] });
+    throw error;
+  }
 }
 
 export type ParsedShareableTeam = ParsedTeamManifest | ParsedBotPackage | PackageDocument;

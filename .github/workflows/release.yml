@@ -48,6 +48,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # CREW has no legacy installs, so the updater bridge to a second releases repo is off: this repository variable is
+  # unset. Set it to a repo (and add RELEASES_PAT) to mirror every release there; never to an upstream repo.
+  LEGACY_RELEASES_REPO: ${{ vars.LEGACY_RELEASES_REPO }}
+
 jobs:
   prepare:
     name: Pin the release commit
@@ -94,13 +99,13 @@ jobs:
             exit 1
           fi
       - name: Refuse to overwrite a published legacy mirror
-        if: steps.pin.outputs.should_release == 'true'
+        if: steps.pin.outputs.should_release == 'true' && env.LEGACY_RELEASES_REPO != ''
         env:
           GH_TOKEN: ${{ secrets.RELEASES_PAT }}
         run: |
           test -n "$GH_TOKEN" || { echo "::error::RELEASES_PAT is required for the updater bridge"; exit 1; }
           v="v$(node -p "require('./package.json').version")"
-          if gh release view "$v" --repo milind-soni/openmausbot-releases --json isDraft --jq .isDraft 2>/dev/null | grep -q false; then
+          if gh release view "$v" --repo "$LEGACY_RELEASES_REPO" --json isDraft --jq .isDraft 2>/dev/null | grep -q false; then
             echo "::error::$v is already published on the legacy mirror — recover the canonical draft instead of rebuilding bytes"
             exit 1
           fi
@@ -193,8 +198,8 @@ jobs:
           for app in release/mac-arm64/OpenMausBot.app release/mac/OpenMausBot.app; do
             update="$app/Contents/Resources/app-update.yml"
             test -f "$update" || { echo "::error::missing $update"; exit 1; }
-            grep -Eq '^owner: milind-soni$' "$update" || { echo "::error::wrong update owner in $update"; exit 1; }
-            grep -Eq '^repo: OpenMausBot$' "$update" || { echo "::error::wrong update repo in $update"; exit 1; }
+            grep -Eq '^owner: jonathanatborrowedbelief$' "$update" || { echo "::error::wrong update owner in $update"; exit 1; }
+            grep -Eq '^repo: CREWSQUIBBLES$' "$update" || { echo "::error::wrong update repo in $update"; exit 1; }
           done
 
       - name: "Gate: the signature must verify BEFORE notarization"
@@ -392,8 +397,8 @@ jobs:
           "$res/cloudflared/cloudflared.exe" version | grep -Fq "cloudflared version 2026.10.3 " || {
             echo "::error::cloudflared has the wrong version"; exit 1; }
           [ -f "$res/app-update.yml" ] || { echo "::error::missing app-update.yml"; exit 1; }
-          grep -Eq '^owner: milind-soni$' "$res/app-update.yml" || { echo "::error::wrong update owner"; exit 1; }
-          grep -Eq '^repo: OpenMausBot$' "$res/app-update.yml" || { echo "::error::wrong update repo"; exit 1; }
+          grep -Eq '^owner: jonathanatborrowedbelief$' "$res/app-update.yml" || { echo "::error::wrong update owner"; exit 1; }
+          grep -Eq '^repo: CREWSQUIBBLES$' "$res/app-update.yml" || { echo "::error::wrong update repo"; exit 1; }
           if grep -q "publisherName" "$res/app-update.yml"; then
             echo "::error::publisherName on an unsigned build breaks every update"; exit 1
           fi
@@ -455,8 +460,8 @@ jobs:
         run: |
           update=release/linux-unpacked/resources/app-update.yml
           test -f "$update" || { echo "::error::missing $update"; exit 1; }
-          grep -Eq '^owner: milind-soni$' "$update" || { echo "::error::wrong update owner"; exit 1; }
-          grep -Eq '^repo: OpenMausBot$' "$update" || { echo "::error::wrong update repo"; exit 1; }
+          grep -Eq '^owner: jonathanatborrowedbelief$' "$update" || { echo "::error::wrong update owner"; exit 1; }
+          grep -Eq '^repo: CREWSQUIBBLES$' "$update" || { echo "::error::wrong update repo"; exit 1; }
       - name: Verify package contents and metadata
         run: node scripts/verify-linux-package.mjs
       - name: Match a normal Ubuntu package parent on the ephemeral runner
@@ -641,6 +646,7 @@ jobs:
           echo "canonical asset count: $(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')"
 
       - name: Mirror the same draft for installed legacy clients
+        if: env.LEGACY_RELEASES_REPO != ''
         env:
           GH_TOKEN: ${{ secrets.RELEASES_PAT }}
           VERSION: ${{ needs.prepare.outputs.version }}
@@ -665,14 +671,14 @@ jobs:
               sleep "$delay"
             done
           }
-          ensure_draft milind-soni/openmausbot-releases \
+          ensure_draft "$LEGACY_RELEASES_REPO" \
             --draft --title "OpenMausBot $VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
-          gh release edit "$tag" --repo milind-soni/openmausbot-releases \
+          gh release edit "$tag" --repo "$LEGACY_RELEASES_REPO" \
             --title "OpenMausBot $VERSION" --notes-file "$RUNNER_TEMP/release-notes.md"
           for file in assets/*; do
-            gh release upload "$tag" "$file" --repo milind-soni/openmausbot-releases --clobber
+            gh release upload "$tag" "$file" --repo "$LEGACY_RELEASES_REPO" --clobber
           done
-          echo "legacy asset count: $(gh release view "$tag" --repo milind-soni/openmausbot-releases --json assets --jq '.assets | length')"
+          echo "legacy asset count: $(gh release view "$tag" --repo "$LEGACY_RELEASES_REPO" --json assets --jq '.assets | length')"
 
       - name: Prove both drafts contain the exact staged bytes
         env:
@@ -692,7 +698,7 @@ jobs:
           ]));
           for (const [repo, token] of [
             [process.env.GITHUB_REPOSITORY, process.env.CANONICAL_TOKEN],
-            ["milind-soni/openmausbot-releases", process.env.LEGACY_TOKEN],
+            ...(process.env.LEGACY_RELEASES_REPO ? [[process.env.LEGACY_RELEASES_REPO, process.env.LEGACY_TOKEN]] : []),
           ]) {
             const json = execFileSync("gh", ["release", "view", `v${version}`, "--repo", repo, "--json", "assets"], {
               encoding: "utf8",
@@ -720,11 +726,15 @@ jobs:
             --repo "$GITHUB_REPOSITORY" --draft=false --latest
           GH_TOKEN="$CANONICAL_TOKEN" gh release view "v$VERSION" \
             --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft | grep -q false
-          GH_TOKEN="$LEGACY_TOKEN" gh release edit "v$VERSION" \
-            --repo milind-soni/openmausbot-releases --draft=false --latest
-          GH_TOKEN="$LEGACY_TOKEN" gh release view "v$VERSION" \
-            --repo milind-soni/openmausbot-releases --json isDraft --jq .isDraft | grep -q false
-          echo "v$VERSION is live on the canonical feed and its legacy updater bridge"
+          if [ -n "$LEGACY_RELEASES_REPO" ]; then
+            GH_TOKEN="$LEGACY_TOKEN" gh release edit "v$VERSION" \
+              --repo "$LEGACY_RELEASES_REPO" --draft=false --latest
+            GH_TOKEN="$LEGACY_TOKEN" gh release view "v$VERSION" \
+              --repo "$LEGACY_RELEASES_REPO" --json isDraft --jq .isDraft | grep -q false
+            echo "v$VERSION is live on the canonical feed and its legacy updater bridge"
+          else
+            echo "v$VERSION is live on the canonical feed (no legacy updater bridge)"
+          fi
           # Publishing created the tag with this workflow's token, and GitHub
           # starts no workflow from events that token creates. Start the
           # tag-driven publishes by hand, on the tag, so they see refs/tags/v*.

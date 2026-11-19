@@ -19,6 +19,7 @@ import { OWNERS, pageById, type SearchHit, type SettingsContext, type SettingsOw
 import { useUpdaterState } from "@/lib/updater";
 import { keySection, type KeyEntry } from "../keys/key-catalog";
 import { HELP_CENTER_URL, desktopAppVersion } from "@/lib/app-links";
+import { cloudAccountBridge, cloudPlanBridge } from "@/lib/upstream-hidden";
 
 export const NAV_ITEM = "relative flex h-8 w-full shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[13px] leading-5 text-ink transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus";
 
@@ -184,7 +185,7 @@ export function SettingsNav({ ctx, place, pages, current, query, hits, keyHits, 
   const appLine = useAppSubLine(ctx.desktop);
   const phone = usePhonePlaceState(!ctx.client);
   const listRef = useRef<HTMLDivElement>(null);
-  const openSource = ctx.desktop && !window.ogb?.cloudAccount && !window.ogb?.cloudPlan;
+  const openSource = ctx.desktop && !cloudAccountBridge() && !cloudPlanBridge();
   const lines: Record<SettingsOwner, { badge: ReactNode; name: string; line: string; page: SettingsPageId }> = {
     place: { badge: <PlaceBadge place={place} size={24} />, name: place.name, line: placeLine, page: "overview" },
     account: { badge: <YouAvatar size={24} />, name: t("settings.page.account"), line: accountLine(account, { browser: !ctx.desktop, place: place.name, openSource }), page: "account" },

@@ -33,6 +33,8 @@ describe("the note's way to My Cloud", () => {
     vi.doMock("./ProIntroduction", () => ({ useCloudPlan: () => ({ view: { kind: "paid", label: "Pro", checking: false }, account: { machine: { status: "ready" } } }) }));
     vi.doMock("./onboarding/WelcomeGate", () => ({ localDesktopPage: () => true }));
     vi.doMock("@/lib/brand", () => ({ brandStatus: () => ({ source: "default" }), productName: () => "MausBot" }));
+    // vi.resetModules() gave this page a fresh switch: on, as shipped. The Cloud note is for a build that shows Cloud.
+    (await import("@/lib/upstream-hidden")).setUpstreamHidden(false);
     const { RoutineScheduleNote } = await import("./RoutineScheduleNote");
     const html = renderToStaticMarkup(createElement(RoutineScheduleNote));
     expect(html.replace(/<[^>]+>/g, "")).toContain("To run routines 24/7, create them in the Cloud. Open the Cloud");

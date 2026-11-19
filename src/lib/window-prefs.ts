@@ -21,15 +21,17 @@ import { readColorUserBubbles, setColorUserBubbles } from "./user-bubble-prefere
 import { latestWebPanels, setWebPanels } from "./web-panel-preferences";
 import { newWebPanelId, validateWebPanel, type WebPanel } from "./web-panels";
 import { onWindowPrefChanged } from "./window-pref-changes";
+import { managedRemoteHidden, updatesConsentWindowBridge } from "./upstream-hidden";
 
 type Pref<I extends WindowPrefId> = { read(): unknown; write(value: WindowPrefValue<I>): unknown };
 const ogb = () => (typeof window === "undefined" ? undefined : window.ogb);
 const companion = () => (pageIsThisComputer() ? companionBridge() : null);
+const unoffered = (name: CompanionRoute) => name === "relay" && managedRemoteHidden();
 const route = (name: CompanionRoute): { read(): unknown; write(on: boolean): unknown } => ({
-  read: async () => (await companion()?.state())?.routes?.[name]?.on,
+  read: async () => unoffered(name) ? undefined : (await companion()?.state())?.routes?.[name]?.on,
   write: (on) => {
     const bridge = companion();
-    if (!bridge) return;
+    if (!bridge || unoffered(name)) return;
     if (name === "tailscale") return bridge.setTailscale ? bridge.setTailscale(on) : on ? bridge.refreshTailscale() : bridge.state();
     return bridge.setRoute ? bridge.setRoute(name, on) : on ? bridge.start([name]) : bridge.state();
   },
@@ -89,8 +91,8 @@ const PREFS: { [I in WindowPrefId]: Pref<I> } = {
     write: (change) => ogb()?.talkShortcut?.set(change),
   },
   "account.productEmails": {
-    read: async () => { const state = await ogb()?.updatesConsent?.state(); return state?.available ? state.status === "opted_in" : undefined; },
-    write: (on) => ogb()?.updatesConsent?.choose({ status: on ? "opted_in" : "withdrawn" }),
+    read: async () => { const state = await updatesConsentWindowBridge()?.state(); return state?.available ? state.status === "opted_in" : undefined; },
+    write: (on) => updatesConsentWindowBridge()?.choose({ status: on ? "opted_in" : "withdrawn" }),
   },
   "remote.wifi": route("wifi"),
   "remote.relay": route("relay"),

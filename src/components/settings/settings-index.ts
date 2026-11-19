@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import type { LocaleKey } from "@/locales";
 import type { AppSettingsSection, SettingsPageId } from "@/state/store";
+import { managedRemoteHidden } from "@/lib/upstream-hidden";
 
 export type { SettingsPageId };
 export type SettingsOwner = "place" | "account" | "app";
@@ -176,7 +177,7 @@ export const SETTINGS_INDEX: readonly SettingsIndexEntry[] = [
     synonyms: ["code", "mobile", "tablet", "companion", "get the phone app"] },
   { id: "paired", page: "phone", anchor: "paired", labelKey: "devices.paired", synonyms: ["devices", "remove", "revoke", "pair again"] },
   { id: "wifi", page: "phone", anchor: "reach", labelKey: "devices.route.wifi", sectionKey: "phone.reach.title", when: hereOnly, synonyms: ["wifi", "wi-fi", "lan", "local network"] },
-  { id: "relay", page: "phone", anchor: "reach", labelKey: "devices.route.relay", sectionKey: "phone.reach.title", when: hereOnly, synonyms: ["anywhere", "relay", "away"] },
+  { id: "relay", page: "phone", anchor: "reach", labelKey: "devices.route.relay", sectionKey: "phone.reach.title", when: (ctx) => ctx.here && !managedRemoteHidden(), synonyms: ["anywhere", "relay", "away"] },
   { id: "keep-awake", page: "phone", anchor: "reach", labelKey: "remote.keepAwake", sectionKey: "phone.reach.title", when: hereOnly, synonyms: ["sleep", "awake", "overnight", "scheduled"] },
   { id: "wake-automations", page: "phone", labelKey: "settings.search.wakeAutomations", jump: "automations", when: hereOnly, topFor: ["sleep", "overnight", "scheduled"], synonyms: ["awake"] },
   { id: "other-computers", page: "phone", anchor: "computers", labelKey: "devices.computers.title", when: hereOnly, topFor: ["tailscale", "other computers", "another computer", "other computer", "my other computer"],

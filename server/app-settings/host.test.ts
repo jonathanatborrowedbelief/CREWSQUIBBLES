@@ -116,6 +116,14 @@ describe("reads", () => {
     expect(JSON.parse(String(got.body.text))).toMatchObject({ id: "rooms.turnTimeoutMinutes", value: "30", allowed: "1 to 1440 minutes", change: "set applies at once, with Undo on the card" });
   });
 
+  it("does not advertise usage analytics as something that sends data to CREW", async () => {
+    const { host, turn } = fixture();
+    const found = await host.handle({ action: "get", id: "general.analytics" }, turn);
+    const text = String(found.body.text);
+    expect(text).toMatch(/no usage data|nothing/i);
+    expect(text).not.toMatch(/PostHog|sends? anonymous usage data to CREW|Send anonymous usage data/i);
+  });
+
   it("names real places only: find falls back to where a thing is, places lists them all", async () => {
     const { host, turn } = fixture();
     const owner = await host.handle({ action: "get", id: "phone.pairing" }, turn);
@@ -341,15 +349,23 @@ describe("owner-only tier", () => {
 
   it("turns a way in to this computer on with Undo, but leaves turning one off to the person", async () => {
     const fx = fixture();
-    fx.windowValues.set("remote.relay", false);
-    const on = await fx.set("remote.relay", "true");
-    expect(on.body.text).toMatch(/^Done: Let your paired phones reach this computer from anywhere, through CREW's relay\./);
-    expect(fx.windowValues.get("remote.relay")).toBe(true);
-    const off = await fx.set("remote.relay", false);
-    expect(off).toMatchObject({ status: 409, body: { error: "Turning off Reach from anywhere is changed only by the person, in Settings → Phone & devices → How your phone reaches this computer → Anywhere, through CREW (only in the desktop app, on this computer's own page). Tell them where in one line; do not try another way." } });
-    expect(fx.windowValues.get("remote.relay")).toBe(true);
+    fx.windowValues.set("remote.tailscale", false);
+    const on = await fx.set("remote.tailscale", "true");
+    expect(on.body.text).toMatch(/^Done: Let your devices reach this computer over Tailscale\./);
+    expect(fx.windowValues.get("remote.tailscale")).toBe(true);
+    const off = await fx.set("remote.tailscale", false);
+    expect(off.status).toBe(409);
+    expect(off.body.error).toMatch(/^Turning off Tailscale is changed only by the person, in Settings → .+ Tell them where in one line; do not try another way\.$/);
+    expect(fx.windowValues.get("remote.tailscale")).toBe(true);
     expect(await fx.undo()).toEqual({ claimed: true, state: "undone" });
-    expect(fx.windowValues.get("remote.relay")).toBe(false);
+    expect(fx.windowValues.get("remote.tailscale")).toBe(false);
+  });
+
+  it("never offers bots the settings that need upstream's account", async () => {
+    const fx = fixture();
+    expect((await fx.set("remote.relay", "true")).status).not.toBe(200);
+    expect((await fx.set("account.productEmails", "true")).status).not.toBe(200);
+    expect(fx.windowValues.get("remote.relay")).toBeUndefined();
   });
 });
 

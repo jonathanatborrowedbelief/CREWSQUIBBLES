@@ -50,7 +50,8 @@ export { friendlyCompanionAccountError };
 
 export { managedEndpointNeed, PHONE_UNUSED_RELEASE_MS } from "./companion-endpoint-need.mjs";
 
-export const DEFAULT_COMPANION_CONTROL_PLANE_URL = "https://accounts.openmausbot.com";
+/** Empty = the free web address and CREW Relay are not set up in this build, and nothing here calls a control plane. Our own origin goes here. */
+export const DEFAULT_COMPANION_CONTROL_PLANE_URL = "";
 
 const DEFAULT_HEALTH_CACHE_MS = 30_000;
 const DEFAULT_AUTO_RETRY_BASE_MS = 10 * 60_000;

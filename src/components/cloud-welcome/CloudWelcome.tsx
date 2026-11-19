@@ -22,6 +22,7 @@ import { useCloudName } from "./parts";
 import { useTeamPeople } from "@/state/team-people";
 import { WelcomeBring, type BringOutcome } from "./WelcomeBring";
 import { WelcomeDone, WelcomeEngine, WelcomeFiles } from "./WelcomeSteps";
+import { cloudSendBridge } from "@/lib/upstream-hidden";
 
 const STEP_TEXT: Record<WelcomeStep, { title: LocaleKey; hint: LocaleKey }> = {
   bring: { title: "cloudWelcome.step.bring", hint: "cloudWelcome.step.bringHint" },
@@ -75,7 +76,7 @@ export function CloudWelcome() {
   const bot = visible.find((candidate) => candidate.chiefOfStaff) ?? visible[0] ?? null;
   const team = Boolean(state.config?.team);
   const cloudHasWork = visible.filter((candidate) => !candidate.defaultBot?.person).length > 1 || state.groups.length > 0;
-  const sendBridge = window.ogb?.remoteClient?.active ? undefined : window.ogb?.cloudSendPage;
+  const sendBridge = window.ogb?.remoteClient?.active ? undefined : cloudSendBridge();
   // An older app still offers Copy this computer by hand: it moves bots here by itself only once updated.
   const older = Boolean(sendBridge && window.ogb && "cloudMove" in window.ogb);
   const [notice] = useCloudSendNotice(sendBridge);

@@ -1140,11 +1140,11 @@ and one link.
 
 ## Announcements from the project
 
-When someone opens the app, the server downloads the project's public announcements file from GitHub
-(`raw.githubusercontent.com`, at most once an hour, a plain GET with nothing of yours in it) and its pages may show one of
-its cards in the corner: product news, a tip, or a sponsor's offer, each once per person
-([docs/announcements.md](announcements.md)). Set `OMB_DISABLE_ANNOUNCEMENTS=1` in the server's environment to never
-download it and never show those cards.
+Announcements are off by default: the server downloads nothing and shows no card. Set `OMB_DISABLE_ANNOUNCEMENTS=0` in the
+server's environment to turn them on. Then, when someone opens the app, the server downloads the announcements file from
+our fork on GitHub (`raw.githubusercontent.com`, at most once an hour, a plain GET with nothing of yours in it) and its pages
+may show one of its cards in the corner: product news, a tip, or a sponsor's offer, each once per person
+([docs/announcements.md](announcements.md)). Any other value, or none, keeps them off.
 
 ## Attachment storage
 

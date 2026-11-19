@@ -7,7 +7,7 @@ vi.mock("@/lib/analytics", () => ({ track: vi.fn() }));
 import { track } from "@/lib/analytics";
 import { setLocale } from "@/lib/i18n";
 import { WHATS_NEW_NOTICE } from "@/lib/notices";
-import { newCloudUrl, reportWhatsNew, startTeamUrl, WHATS_NEW_SOURCES, whatsNewAudience, whatsNewSlides, whatsNewView, type WhatsNewView } from "./whats-new";
+import { CLOUD_SITE, newCloudUrl, reportWhatsNew, STAGING_SITE, startTeamUrl, WHATS_NEW_SOURCES, whatsNewAudience, whatsNewSlides, whatsNewView, type WhatsNewView } from "./whats-new";
 
 const DAY = 86_400_000, NOW = Date.UTC(2026, 10, 12);
 const OFFER: CloudOffer = { recommended: "pro", refundDays: 14, plans: [
@@ -100,10 +100,10 @@ describe("the slides' plans, from the Admin's offer", () => {
 describe("the funnel", () => {
   it("each slide's links carry its own source tag, to the Cloud website or the staging Admin's", () => {
     expect(WHATS_NEW_SOURCES).toEqual({ pro: "app_whats_new_pro", team: "app_whats_new_team" });
-    expect(newCloudUrl()).toBe("https://cloud.openmausbot.com/cloud?src=app_whats_new_pro");
-    expect(startTeamUrl()).toBe("https://cloud.openmausbot.com/pro/buy?plan=team&src=app_whats_new_team");
-    expect(newCloudUrl(true)).toBe("https://omb-cloud-staging.fly.dev/cloud?src=app_whats_new_pro");
-    expect(startTeamUrl(true)).toBe("https://omb-cloud-staging.fly.dev/pro/buy?plan=team&src=app_whats_new_team");
+    expect(newCloudUrl()).toBe(`${CLOUD_SITE}/cloud?src=app_whats_new_pro`);
+    expect(startTeamUrl()).toBe(`${CLOUD_SITE}/pro/buy?plan=team&src=app_whats_new_team`);
+    expect(newCloudUrl(true)).toBe(`${STAGING_SITE}/cloud?src=app_whats_new_pro`);
+    expect(startTeamUrl(true)).toBe(`${STAGING_SITE}/pro/buy?plan=team&src=app_whats_new_team`);
     for (const tag of Object.values(WHATS_NEW_SOURCES)) expect(tag, "the Admin's tag form").toMatch(/^[a-z0-9_]{1,32}$/);
   });
 

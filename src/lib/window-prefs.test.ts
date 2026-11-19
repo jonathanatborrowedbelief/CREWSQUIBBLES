@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setUpstreamHidden } from "./upstream-hidden";
 import { applyWindowPref, reportWindowPrefs, windowPrefValues } from "./window-prefs";
 
 const values = new Map<string, string>();
@@ -11,6 +12,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  setUpstreamHidden(false);
 });
 
 describe("window preferences", () => {
@@ -51,6 +53,24 @@ describe("window preferences", () => {
     vi.stubGlobal("window", { ogb });
     vi.stubGlobal("ogb", ogb);
     expect(await windowPrefValues()).toMatchObject({ "remote.wifi": false, "remote.relay": true, "remote.keepAwake": false });
+    applyWindowPref({ kind: "window-pref", id: "remote.wifi", value: true });
+    expect(setRoute).toHaveBeenCalledWith("wifi", true);
+  });
+
+  it("neither reads nor turns on Anywhere while upstream's account service is hidden, and leaves Same Wi-Fi alone", async () => {
+    const routes = { wifi: { on: false, since: null }, relay: { on: false, since: null } };
+    const setRoute = vi.fn(async (route: "wifi" | "relay", on: boolean) => { routes[route].on = on; return { routes } as never; });
+    const ogb = { companion: { state: async () => ({ routes, keepAwake: false }), setRoute }, updatesConsent: { state: async () => ({ available: true, status: "opted_in" }), choose: vi.fn() } };
+    vi.stubGlobal("window", { ogb });
+    vi.stubGlobal("ogb", ogb);
+    expect(await windowPrefValues(), "control: the switch off").toMatchObject({ "remote.relay": false, "account.productEmails": true });
+    setUpstreamHidden(true);
+    const hidden = await windowPrefValues();
+    expect(hidden).toMatchObject({ "remote.wifi": false });
+    expect(hidden).not.toHaveProperty("remote.relay");
+    expect(hidden).not.toHaveProperty("account.productEmails");
+    applyWindowPref({ kind: "window-pref", id: "remote.relay", value: true });
+    expect(setRoute).not.toHaveBeenCalled();
     applyWindowPref({ kind: "window-pref", id: "remote.wifi", value: true });
     expect(setRoute).toHaveBeenCalledWith("wifi", true);
   });
